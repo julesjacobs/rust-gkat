@@ -3,13 +3,8 @@ use std::{
     hash::{self, Hash, Hasher},
 };
 
-use builder::{
-    bdd::{BddBuilder, RobddBuilder},
-    cache::AllIteTable,
-    BottomUpBuilder,
-};
+use builder::BottomUpBuilder;
 use hashconsing::{HConsed, HConsign, HashConsign};
-use petgraph::matrix_graph::Zero;
 use repr::{BddPtr, DDNNFPtr, VarLabel};
 use rsdd::*;
 
@@ -52,94 +47,99 @@ pub enum BExp_ {
     Not(BExp),
 }
 
-pub fn mk_zero(factory: &mut HConsign<BExp_>) -> BExp {
-    factory.mk(BExp_::Zero)
+pub fn mk_zero(fb: &mut HConsign<BExp_>) -> BExp {
+    fb.mk(BExp_::Zero)
 }
 
-pub fn mk_one(factory: &mut HConsign<BExp_>) -> BExp {
-    factory.mk(BExp_::One)
+pub fn mk_one(fb: &mut HConsign<BExp_>) -> BExp {
+    fb.mk(BExp_::One)
 }
 
-pub fn mk_pbool(factory: &mut HConsign<BExp_>, s: String) -> BExp {
-    factory.mk(BExp_::PBool(Name::mk(s)))
+pub fn mk_pbool(fb: &mut HConsign<BExp_>, s: String) -> BExp {
+    fb.mk(BExp_::PBool(Name::mk(s)))
 }
 
-pub fn mk_or(factory: &mut HConsign<BExp_>, b1: BExp, b2: BExp) -> BExp {
-    if b1 == mk_one(factory) {
-        mk_one(factory)
-    } else if b2 == mk_one(factory) {
-        mk_one(factory)
-    } else if b1 == mk_zero(factory) {
+pub fn mk_or(fb: &mut HConsign<BExp_>, b1: BExp, b2: BExp) -> BExp {
+    if b1 == mk_one(fb) {
+        mk_one(fb)
+    } else if b2 == mk_one(fb) {
+        mk_one(fb)
+    } else if b1 == mk_zero(fb) {
         b2
-    } else if b2 == mk_zero(factory) {
+    } else if b2 == mk_zero(fb) {
         b1
     } else if b1 == b2 {
         b1
     } else {
-        factory.mk(BExp_::Or(b1, b2))
+        fb.mk(BExp_::Or(b1, b2))
     }
 }
 
-pub fn mk_and(factory: &mut HConsign<BExp_>, b1: BExp, b2: BExp) -> BExp {
-    if b1 == mk_one(factory) {
+pub fn mk_and(fb: &mut HConsign<BExp_>, b1: BExp, b2: BExp) -> BExp {
+    if b1 == mk_one(fb) {
         b2
-    } else if b2 == mk_one(factory) {
+    } else if b2 == mk_one(fb) {
         b1
-    } else if b1 == mk_zero(factory) {
-        mk_zero(factory)
-    } else if b2 == mk_zero(factory) {
-        mk_zero(factory)
+    } else if b1 == mk_zero(fb) {
+        mk_zero(fb)
+    } else if b2 == mk_zero(fb) {
+        mk_zero(fb)
     } else if b1 == b2 {
         b1
     } else {
-        factory.mk(BExp_::And(b1, b2))
+        fb.mk(BExp_::And(b1, b2))
     }
 }
 
-pub fn mk_not(factory: &mut HConsign<BExp_>, b1: BExp) -> BExp {
-    if b1 == mk_one(factory) {
-        mk_zero(factory)
-    } else if b1 == mk_zero(factory) {
-        mk_one(factory)
+pub fn mk_not(fb: &mut HConsign<BExp_>, b1: BExp) -> BExp {
+    if b1 == mk_one(fb) {
+        mk_zero(fb)
+    } else if b1 == mk_zero(fb) {
+        mk_one(fb)
     } else {
-        factory.mk(BExp_::Not(b1))
+        fb.mk(BExp_::Not(b1))
     }
 }
 
-pub fn to_bdd<'a>(builder: &'a RobddBuilder<'a, AllIteTable<BddPtr<'a>>>, b: &BExp) -> BddPtr<'a> {
+pub fn to_bdd<'a, Builder>(bdd: &'a Builder, b: &BExp) -> BddPtr<'a>
+where
+    Builder: BottomUpBuilder<'a, BddPtr<'a>>,
+{
     use BExp_::*;
     match b.get() {
-        One => builder.true_ptr(),
-        Zero => builder.false_ptr(),
-        PBool(n) => builder.var(VarLabel::new(n.id), true),
+        One => bdd.true_ptr(),
+        Zero => bdd.false_ptr(),
+        PBool(n) => bdd.var(VarLabel::new(n.id), true),
         Or(b1, b2) => {
-            let b1 = to_bdd(builder, b1);
-            let b2 = to_bdd(builder, b2);
-            builder.or(b1, b2)
+            let b1 = to_bdd(bdd, b1);
+            let b2 = to_bdd(bdd, b2);
+            bdd.or(b1, b2)
         }
         And(b1, b2) => {
-            let b1 = to_bdd(builder, b1);
-            let b2 = to_bdd(builder, b2);
-            builder.and(b1, b2)
+            let b1 = to_bdd(bdd, b1);
+            let b2 = to_bdd(bdd, b2);
+            bdd.and(b1, b2)
         }
         Not(b) => {
-            let b = to_bdd(builder, b);
-            builder.negate(b)
+            let b = to_bdd(bdd, b);
+            bdd.negate(b)
         }
     }
 }
 
-pub fn is_false<'a>(builder: &'a RobddBuilder<'a, AllIteTable<BddPtr<'a>>>, b: &BExp) -> bool {
-    let b = to_bdd(builder, b);
+pub fn is_false<'a, Builder>(bdd: &'a Builder, b: &BExp) -> bool
+where
+    Builder: BottomUpBuilder<'a, BddPtr<'a>>,
+{
+    let b = to_bdd(bdd, b);
     b.is_false()
 }
 
-pub fn is_equiv<'a>(
-    builder: &'a RobddBuilder<'a, AllIteTable<BddPtr<'a>>>,
-    b1: &BExp,
-    b2: &BExp,
-) -> bool {
-    let b1 = to_bdd(builder, b1);
-    let b2 = to_bdd(builder, b2);
+pub fn is_equiv<'a, Builder>(bdd: &'a Builder, b1: &BExp, b2: &BExp) -> bool
+where
+    Builder: BottomUpBuilder<'a, BddPtr<'a>>,
+{
+    let b1 = to_bdd(bdd, b1);
+    let b2 = to_bdd(bdd, b2);
     b1 == b2
 }

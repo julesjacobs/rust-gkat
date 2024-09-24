@@ -1,4 +1,5 @@
 mod bexp;
+mod dead_exp;
 mod exp;
 use bexp::*;
 use exp::{derivative, mk_test, Exp_};
