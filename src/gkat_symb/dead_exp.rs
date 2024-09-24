@@ -4,9 +4,11 @@ use biodivine_lib_bdd::BddPathIterator;
 use hashconsing::HConsign;
 use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
 
-use crate::{exp::*, is_false, BExp, BExp_};
+use crate::gkat_symb::bexp::*;
+use crate::gkat_symb::exp::*;
 
-enum VisitResult {
+#[derive(Debug, Clone, Copy)]
+pub enum VisitResult {
     Dead,
     Live,
     Unknown,
@@ -40,7 +42,7 @@ where
     result
 }
 
-fn visit<'a, Builder>(
+pub fn visit<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
