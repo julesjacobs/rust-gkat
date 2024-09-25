@@ -3,8 +3,10 @@ use std::collections::HashSet;
 use hashconsing::HConsign;
 use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
 
-use crate::gkat_symb::bexp::*;
-use crate::gkat_symb::exp::*;
+use crate::gkat_ast::bexp::*;
+use crate::gkat_ast::exp::*;
+use crate::gkat_symb::derivative::*;
+use crate::gkat_symb::epsilon::*;
 
 #[derive(Debug, Clone, Copy)]
 pub enum VisitResult {

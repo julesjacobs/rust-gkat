@@ -1,12 +1,16 @@
-mod gkat_symb {
+mod gkat_ast {
     pub mod bexp;
-    pub mod dead;
-    pub mod equiv;
     pub mod exp;
 }
+mod gkat_symb {
+    pub mod dead;
+    pub mod derivative;
+    pub mod epsilon;
+    pub mod equiv;
+}
 
-use crate::gkat_symb::bexp::*;
-use crate::gkat_symb::exp::*;
+use crate::gkat_ast::bexp::*;
+use crate::gkat_ast::exp::*;
 use gkat_symb::equiv::equiv;
 use hashconsing::HConsign;
 

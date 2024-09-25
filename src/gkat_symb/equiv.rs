@@ -1,17 +1,15 @@
-use disjoint_sets::{UnionFind, UnionFindNode};
+use crate::gkat_ast::bexp::*;
+use crate::gkat_ast::exp::*;
+use crate::gkat_symb::dead::*;
+use crate::gkat_symb::derivative::*;
+use crate::gkat_symb::epsilon::*;
+use disjoint_sets::UnionFindNode;
 use hashconsing::HConsign;
 use rsdd::{
     builder::{bdd::RobddBuilder, cache::AllIteTable, BottomUpBuilder},
     repr::BddPtr,
 };
 use std::collections::{HashMap, HashSet};
-
-use crate::{
-    derivative, epsilon, gkat_symb::exp, is_equiv, is_false, mk_and, mk_not, mk_or, mk_zero, BExp,
-    BExp_, Exp, Exp_,
-};
-
-use super::dead::{self, is_dead};
 
 fn exp_uf(tbl: &mut HashMap<Exp, UnionFindNode<u64>>, exp: &Exp) -> UnionFindNode<u64> {
     match tbl.get(exp) {

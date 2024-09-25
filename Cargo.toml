@@ -6,10 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lazy_static = "1.5.0"
 rsdd = { git = "https://github.com/neuppl/rsdd" }
-union-find = "0.4.3"
-ena = "0.14.3"
 disjoint-sets = "0.4.2"
 hashconsing = "1.6.0"
+chumsky = "0.9.3"
 
