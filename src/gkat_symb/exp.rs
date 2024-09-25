@@ -3,8 +3,6 @@ use hashconsing::{HConsed, HConsign, HashConsign};
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
-    ops::Mul,
-    panic::PanicInfo,
 };
 
 #[derive(Debug, Clone, Eq)]
@@ -129,7 +127,7 @@ pub fn epsilon(fb: &mut HConsign<BExp_>, m: &Exp) -> BExp {
     }
 }
 
-fn combine_BE_with_a(
+fn combine_bexp_with(
     fb: &mut HConsign<BExp_>,
     be: BExp,
     m: Vec<(BExp, (Exp, Action))>,
@@ -193,7 +191,7 @@ pub fn derivative(
 ) -> Vec<(BExp, (Exp, Action))> {
     use Exp_::*;
     match exp.get() {
-        Test(_) => Vec::new(),
+        Test(_) => vec![],
         Act(n) => {
             let one_exp = mk_one(fb);
             let e = mk_test(fp, one_exp.clone());
@@ -203,8 +201,8 @@ pub fn derivative(
             let dexp1 = derivative(fb, fp, p1);
             let dexp2 = derivative(fb, fp, p2);
             let not_be = mk_not(fb, be.clone());
-            let mut combine1 = combine_BE_with_a(fb, be.clone(), dexp1);
-            let mut combine2 = combine_BE_with_a(fb, not_be, dexp2);
+            let mut combine1 = combine_bexp_with(fb, be.clone(), dexp1);
+            let mut combine2 = combine_bexp_with(fb, not_be, dexp2);
             combine1.append(&mut combine2);
             combine1
         }

@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 
-use biodivine_lib_bdd::BddPathIterator;
 use hashconsing::HConsign;
 use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
 
@@ -71,5 +70,27 @@ where
         } else {
             Live
         }
+    }
+}
+
+pub fn is_dead<'a, Builder>(
+    fb: &mut HConsign<BExp_>,
+    fp: &mut HConsign<Exp_>,
+    bdd: &'a Builder,
+    dead_states: &mut HashSet<Exp>,
+    exp: &Exp,
+) -> bool
+where
+    Builder: BottomUpBuilder<'a, BddPtr<'a>>,
+{
+    use VisitResult::*;
+    let mut explored: HashSet<Exp> = HashSet::new();
+    match visit(fb, fp, bdd, dead_states, &mut explored, exp) {
+        Unknown => {
+            dead_states.extend(explored);
+            true
+        }
+        Live => false,
+        Dead => true,
     }
 }
