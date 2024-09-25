@@ -1,0 +1,23 @@
+use std::str::FromStr;
+use crate::parsing::ast::*;
+
+grammar;
+
+Name: String = <s:r"[a-zA-Z][a-zA-Z0-9]*"> => s.to_string();
+
+pub BExp: BExp = {
+    "0" => BExp::Zero,
+    "1" => BExp::One,
+    <s:Name> => BExp::PBool(s),
+    "(not" <b:BExp> ")" => BExp::Not(Box::new(b)),
+    "(or" <b1:BExp> <b2:BExp> ")" => BExp::Or(Box::new(b1), Box::new(b2)),
+    "(and" <b1:BExp> <b2:BExp> ")" => BExp::And(Box::new(b1), Box::new(b2)),
+};
+
+pub Exp: Exp = {
+    <s:Name> => Exp::Act(s),
+    "(seq" <p1:Exp> <p2:Exp> ")" => Exp::Seq(Box::new(p1), Box::new(p2)),
+    "(if" <b:BExp> <p1:Exp> <p2:Exp> ")" => Exp::If(b, Box::new(p1), Box::new(p2)),
+    "(test" <b:BExp> ")" => Exp::Test(b),
+    "(while" <b:BExp> <p:Exp> ")" => Exp::While(b, Box::new(p))
+}

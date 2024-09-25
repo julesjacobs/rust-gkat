@@ -43,8 +43,8 @@ pub enum Exp_ {
     While(BExp, Exp),
 }
 
-pub fn mk_act(factory: &mut HConsign<Exp_>, a: Action) -> Exp {
-    factory.mk(Exp_::Act(a))
+pub fn mk_act(fp: &mut HConsign<Exp_>, s: String) -> Exp {
+    fp.mk(Exp_::Act(Action::mk(s)))
 }
 
 pub fn mk_skip(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>) -> Exp {

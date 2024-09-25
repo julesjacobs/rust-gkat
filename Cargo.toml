@@ -5,9 +5,12 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[build-dependencies]
+lalrpop = "0.21.0"
+
 [dependencies]
 rsdd = { git = "https://github.com/neuppl/rsdd" }
 disjoint-sets = "0.4.2"
 hashconsing = "1.6.0"
-chumsky = "0.9.3"
+lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
 
