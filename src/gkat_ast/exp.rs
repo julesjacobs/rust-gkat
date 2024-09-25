@@ -93,7 +93,7 @@ pub fn mk_if(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, b: BExp, p1: Exp
         let p0 = mk_test(fp, b);
         mk_seq(fb, fp, p0, p1)
     } else {
-        fp.mk(Exp_::Seq(p1, p2))
+        fp.mk(Exp_::If(b, p1, p2))
     }
 }
 

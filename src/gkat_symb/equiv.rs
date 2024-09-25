@@ -47,6 +47,11 @@ where
 {
     let reject1 = reject(fb, fp, exp1);
     let reject2 = reject(fb, fp, exp2);
+    // println!("exp1 = {:?}", exp1);
+    // println!("exp2 = {:?}", exp2);
+    // println!("reject1 = {:?}", reject1);
+    // println!("reject2 = {:?}", reject2);
+
     let mut exp1_uf = exp_uf(tbl, exp1);
     let mut exp2_uf = exp_uf(tbl, exp2);
 
@@ -62,14 +67,23 @@ where
         let dexp1 = derivative(fb, fp, exp1);
         let dexp2 = derivative(fb, fp, exp2);
         let assert0 = is_equiv(bdd, &eps1, &eps2);
+        if !assert0 {
+            return false;
+        }
         let assert1 = dexp2.clone().into_iter().all(|(b0, (exp, _))| {
             let b1 = mk_and(fb, reject1.clone(), b0);
             is_false(bdd, &b1) || is_dead(fb, fp, bdd, dead_states, &exp)
         });
+        if !assert1 {
+            return false;
+        }
         let assert2 = dexp1.clone().into_iter().all(|(b0, (exp, _))| {
             let b1 = mk_and(fb, reject2.clone(), b0);
             is_false(bdd, &b1) || is_dead(fb, fp, bdd, dead_states, &exp)
         });
+        if !assert2 {
+            return false;
+        }
         let mut assert3 = true;
         for (be1, (next_exp1, p)) in dexp1 {
             for (be2, (next_exp2, q)) in dexp2.clone() {
@@ -95,7 +109,7 @@ where
                 }
             }
         }
-        assert0 && assert1 && assert2 && assert3
+        assert3
     }
 }
 
