@@ -1,5 +1,5 @@
 use std::{
-    collections::hash_map::DefaultHasher,
+    collections::{hash_map::DefaultHasher, HashMap},
     hash::{self, Hash, Hasher},
 };
 
@@ -14,12 +14,31 @@ pub struct Name {
     id: u64,
 }
 
-impl Name {
-    pub fn mk(s: String) -> Self {
-        let mut hasher = DefaultHasher::new();
-        s.hash(&mut hasher);
-        let id = hasher.finish();
-        Name { name: s, id: id }
+pub struct NameBuilder {
+    stamp: u64,
+    hmap: HashMap<String, u64>,
+}
+
+impl NameBuilder {
+    pub fn new() -> NameBuilder {
+        NameBuilder {
+            stamp: 0,
+            hmap: HashMap::new(),
+        }
+    }
+
+    pub fn mk(&mut self, s: String) -> Name {
+        match self.hmap.get(&s) {
+            Some(id) => Name { name: s, id: *id },
+            None => {
+                self.stamp += 1;
+                self.hmap.insert(s.clone(), self.stamp);
+                Name {
+                    name: s,
+                    id: self.stamp,
+                }
+            }
+        }
     }
 }
 
@@ -55,8 +74,8 @@ pub fn mk_one(fb: &mut HConsign<BExp_>) -> BExp {
     fb.mk(BExp_::One)
 }
 
-pub fn mk_pbool(fb: &mut HConsign<BExp_>, s: String) -> BExp {
-    fb.mk(BExp_::PBool(Name::mk(s)))
+pub fn mk_pbool(nb: &mut NameBuilder, fb: &mut HConsign<BExp_>, s: String) -> BExp {
+    fb.mk(BExp_::PBool(nb.mk(s)))
 }
 
 pub fn mk_or(fb: &mut HConsign<BExp_>, b1: BExp, b2: BExp) -> BExp {

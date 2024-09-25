@@ -23,12 +23,13 @@ use hashconsing::HConsign;
 use parsing::parser::{parse, test};
 
 fn main() {
+    let mut nb: NameBuilder = NameBuilder::new();
     let mut fb: HConsign<BExp_> = HConsign::empty();
     let mut fp: HConsign<Exp_> = HConsign::empty();
     let args: Vec<String> = env::args().collect();
     let file1 = fs::read_to_string(&args[1]).expect("cannot read file");
     let file2 = fs::read_to_string(&args[2]).expect("cannot read file");
-    let exp1 = parse(file1).to_hashcons(&mut fb, &mut fp);
-    let exp2 = parse(file2).to_hashcons(&mut fb, &mut fp);
+    let exp1 = parse(file1).to_hashcons(&mut nb, &mut fb, &mut fp);
+    let exp2 = parse(file2).to_hashcons(&mut nb, &mut fb, &mut fp);
     println!("{}", equiv(&mut fb, &mut fp, &exp1, &exp2))
 }
