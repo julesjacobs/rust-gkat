@@ -20,4 +20,9 @@ pub Exp: Exp = {
     "(if" <b:BExp> <p1:Exp> <p2:Exp> ")" => Exp::If(b, Box::new(p1), Box::new(p2)),
     "(test" <b:BExp> ")" => Exp::Test(b),
     "(while" <b:BExp> <p:Exp> ")" => Exp::While(b, Box::new(p))
-}
+};
+
+pub Input: (Exp, Exp) = {
+    "exp1" "{" <e1:Exp> "}"
+    "exp2" "{" <e2:Exp> "}" => (e1, e2)
+};

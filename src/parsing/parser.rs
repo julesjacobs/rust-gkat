@@ -25,6 +25,6 @@ pub fn test() {
     );
 }
 
-pub fn parse(s: String) -> Exp {
-    spec::ExpParser::new().parse(&s).unwrap()
+pub fn parse(s: String) -> (Exp, Exp) {
+    spec::InputParser::new().parse(&s).unwrap()
 }
