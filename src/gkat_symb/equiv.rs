@@ -42,10 +42,6 @@ where
 {
     let reject1 = reject(fb, fp, exp1);
     let reject2 = reject(fb, fp, exp2);
-    // println!("exp1 = {:?}", exp1);
-    // println!("exp2 = {:?}", exp2);
-    // println!("reject1 = {:?}", reject1);
-    // println!("reject2 = {:?}", reject2);
 
     if tbl
         .get(&ExpKey(exp1.clone(), exp2.clone()))

@@ -3,7 +3,6 @@ use crate::gkat_ast::exp::*;
 use crate::gkat_symb::dead::*;
 use crate::gkat_symb::derivative::*;
 use crate::gkat_symb::epsilon::*;
-use disjoint_sets::UnionFindNode;
 use hashconsing::HConsign;
 use recursive::recursive;
 use rsdd::{
@@ -34,7 +33,7 @@ fn equiv_helper<'a, Builder>(
     cache: &mut HashMap<BExp, BddPtr<'a>>,
     dead_states: &mut HashSet<Exp>,
     explored: &mut HashSet<Exp>,
-    tbl: &mut HashMap<Exp, UnionFindNode<u64>>,
+    tbl: &mut HashMap<ExpKey, bool>,
     exp1: &Exp,
     exp2: &Exp,
 ) -> bool
@@ -44,15 +43,13 @@ where
     let mut queue = VecDeque::new();
     queue.push_back((exp1.clone(), exp2.clone()));
     while let Some((exp1, exp2)) = queue.pop_front() {
-        // println!("exp1 = {:?}", exp1);
-        // println!("exp2 = {:?}", exp2);
-        // println!("------------------------------");
         let reject1 = reject(fb, fp, &exp1);
         let reject2 = reject(fb, fp, &exp2);
-        let mut exp1_uf = exp_uf(tbl, &exp1);
-        let mut exp2_uf = exp_uf(tbl, &exp2);
 
-        if exp1_uf == exp2_uf {
+        if tbl
+            .get(&ExpKey(exp1.clone(), exp2.clone()))
+            .is_some_and(|b| *b)
+        {
             continue;
         } else if dead_states.contains(&exp1)
             && is_dead(fb, fp, bdd, cache, dead_states, explored, &exp2)
@@ -92,7 +89,8 @@ where
                     if is_false(bdd, cache, &mk_and(fb, be1.clone(), be2)) {
                         continue;
                     } else if p == q {
-                        exp1_uf.union(&mut exp2_uf);
+                        tbl.insert(ExpKey(exp1.clone(), exp2.clone()), true);
+                        tbl.insert(ExpKey(exp2.clone(), exp1.clone()), true);
                         queue.push_back((next_exp1.clone(), next_exp2));
                     } else {
                         let result1 =
@@ -120,7 +118,7 @@ where
 pub fn equiv(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp1: &Exp, exp2: &Exp) -> bool {
     let mut dead_states: HashSet<Exp> = HashSet::new();
     let mut explored: HashSet<Exp> = HashSet::new();
-    let mut tbl: HashMap<Exp, UnionFindNode<u64>> = HashMap::new();
+    let mut tbl: HashMap<ExpKey, bool> = HashMap::new();
     let mut cache: HashMap<BExp, BddPtr> = HashMap::new();
     let bdd = RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
     equiv_helper(

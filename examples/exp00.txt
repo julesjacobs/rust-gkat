@@ -1,23 +1,4 @@
-exp1 {
-    (seq (seq (seq (seq (seq p9 (seq p5 p2)) p4) (if (and b28 (or b2 b70)) (seq p2
-    p4) (if (not b27) p5 p3))) (seq (seq (if (not b93) (seq (test (not b93)) (if
-    (and (and b60 b18) b99) p5 p9)) (if (and b57 b45) p9 p6)) (if (or (or b49 (or
-    b61 b89)) (or (or b49 b61) b89)) p22 (if (and b28 b50) p5 p3))) (seq (seq (seq
-    p8 p98) (seq p2 p1)) (if (or b15 (not b12)) (seq p1 p2) (seq p3 p9))))) (if (or
-    (or b23 b39) b88) (seq (seq (if (not b15) (seq p6 p2) (seq p3 p2)) (seq (seq p66
-    p4) (if (and b4 (and b63 b9)) p65 p3))) (seq (seq (seq p5 p42) (seq p3 p8)) (seq
-    (seq p0 p2) (while (or (or b54 b3) (not b5)) (seq p0 p7))))) (seq (seq (seq (seq
-    p0 p5) (seq p9 p10)) (seq (seq p5 p5) (seq p9 p1))) (seq (seq (seq p5 p42) (seq
-    p3 p8)) (seq (seq p0 p2) (while (or (or b54 b3) (not b5)) (seq p0 p7)))))))
+exp1 { p0
 }
-exp2 {
-    (seq (seq (seq (seq (seq p9 (seq p5 p2)) (if b85 p4 p4)) (if (and b28 (or b2
-    b70)) (seq p2 p4) (if (not b27) p5 p3))) (seq (seq (if (not b93) (if (and b60
-    (and b18 b99)) p5 p9) (if (and b57 b45) p9 p6)) (if (or b49 (or b61 b89)) p22
-    (if (and b28 b50) p5 p3))) (seq (seq (seq p8 p98) (seq p2 p1)) (if (or b15 (not
-    b12)) (seq p1 p2) (seq p3 p9))))) (seq (if (or (or b23 (or b39 b88)) (or (or b23
-    b39) b88)) (seq (if (not b15) (seq p6 p2) (seq p3 p2)) (seq (seq p66 p4) (if
-    (and b4 (and b63 b9)) p65 p3))) (seq (seq (seq p0 p5) (seq p9 p10)) (seq (seq p5
-    p5) (seq p9 p1)))) (seq (seq (seq p5 p42) (seq p3 p8)) (seq (seq p0 p2) (while
-    (or (or b54 b3) (not b5)) (seq p0 p7))))))
+exp2 { p1
 }

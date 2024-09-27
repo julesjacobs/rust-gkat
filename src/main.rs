@@ -7,6 +7,7 @@ mod gkat_symb {
     pub mod derivative;
     pub mod epsilon;
     pub mod equiv;
+    pub mod equiv_iter;
 }
 mod parsing {
     pub mod ast;
@@ -18,7 +19,8 @@ use std::fs;
 
 use crate::gkat_ast::bexp::*;
 use crate::gkat_ast::exp::*;
-use gkat_symb::equiv::equiv;
+use gkat_symb::equiv;
+use gkat_symb::equiv_iter;
 use hashconsing::HConsign;
 use parsing::parser::parse;
 
@@ -31,5 +33,5 @@ fn main() {
     let (exp1, exp2) = parse(file);
     let exp1 = exp1.to_hashcons(&mut nb, &mut fb, &mut fp);
     let exp2 = exp2.to_hashcons(&mut nb, &mut fb, &mut fp);
-    println!("{}", equiv(&mut fb, &mut fp, &exp1, &exp2))
+    println!("{}", equiv::equiv(&mut fb, &mut fp, &exp1, &exp2))
 }
