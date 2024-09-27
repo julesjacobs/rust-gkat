@@ -5,6 +5,7 @@ use crate::gkat_symb::derivative::*;
 use crate::gkat_symb::epsilon::*;
 use disjoint_sets::UnionFindNode;
 use hashconsing::HConsign;
+use recursive::recursive;
 use rsdd::{
     builder::{bdd::RobddBuilder, cache::AllIteTable, BottomUpBuilder},
     repr::BddPtr,
@@ -32,10 +33,12 @@ fn reject(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp: &Exp) -> BExp 
     mk_and(fb, not_epsilon, not_transitions)
 }
 
+#[recursive]
 fn equiv_helper<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
+    cache: &mut HashMap<BExp, bool>,
     dead_states: &mut HashSet<Exp>,
     explored: &mut HashSet<Exp>,
     tbl: &mut HashMap<Exp, UnionFindNode<u64>>,
@@ -58,9 +61,9 @@ where
     if exp1_uf == exp2_uf {
         true
     } else if dead_states.contains(exp1) {
-        is_dead(fb, fp, bdd, dead_states, exp2)
+        is_dead(fb, fp, bdd, cache, dead_states, exp2)
     } else if dead_states.contains(exp2) {
-        is_dead(fb, fp, bdd, dead_states, exp1)
+        is_dead(fb, fp, bdd, cache, dead_states, exp1)
     } else {
         let eps1 = epsilon(fb, exp1);
         let eps2 = epsilon(fb, exp2);
@@ -72,14 +75,14 @@ where
         }
         let assert1 = dexp2.clone().into_iter().all(|(b0, (exp, _))| {
             let b1 = mk_and(fb, reject1.clone(), b0);
-            is_false(bdd, &b1) || is_dead(fb, fp, bdd, dead_states, &exp)
+            is_false(bdd, cache, &b1) || is_dead(fb, fp, bdd, cache, dead_states, &exp)
         });
         if !assert1 {
             return false;
         }
         let assert2 = dexp1.clone().into_iter().all(|(b0, (exp, _))| {
             let b1 = mk_and(fb, reject2.clone(), b0);
-            is_false(bdd, &b1) || is_dead(fb, fp, bdd, dead_states, &exp)
+            is_false(bdd, cache, &b1) || is_dead(fb, fp, bdd, cache, dead_states, &exp)
         });
         if !assert2 {
             return false;
@@ -87,7 +90,7 @@ where
         let mut assert3 = true;
         for (be1, (next_exp1, p)) in dexp1 {
             for (be2, (next_exp2, q)) in dexp2.clone() {
-                if is_false(bdd, &mk_and(fb, be1.clone(), be2)) {
+                if is_false(bdd, cache, &mk_and(fb, be1.clone(), be2)) {
                     continue;
                 } else if p == q {
                     exp1_uf.union(&mut exp2_uf);
@@ -96,6 +99,7 @@ where
                             fb,
                             fp,
                             bdd,
+                            cache,
                             dead_states,
                             explored,
                             tbl,
@@ -103,8 +107,8 @@ where
                             &next_exp2,
                         )
                 } else {
-                    let result1 = is_dead(fb, fp, bdd, dead_states, &next_exp1);
-                    let result2 = is_dead(fb, fp, bdd, dead_states, &next_exp2);
+                    let result1 = is_dead(fb, fp, bdd, cache, dead_states, &next_exp1);
+                    let result2 = is_dead(fb, fp, bdd, cache, dead_states, &next_exp2);
                     assert3 = assert3 && (result1 && result2)
                 }
             }
@@ -118,10 +122,12 @@ pub fn equiv(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp1: &Exp, exp2
     let mut explored: HashSet<Exp> = HashSet::new();
     let mut tbl: HashMap<Exp, UnionFindNode<u64>> = HashMap::new();
     let bdd = RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
+    let mut cache: HashMap<BExp, bool> = HashMap::new();
     equiv_helper(
         fb,
         fp,
         &bdd,
+        &mut cache,
         &mut dead_states,
         &mut explored,
         &mut tbl,

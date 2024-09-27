@@ -146,12 +146,18 @@ where
     }
 }
 
-pub fn is_false<'a, Builder>(bdd: &'a Builder, b: &BExp) -> bool
+pub fn is_false<'a, Builder>(bdd: &'a Builder, cache: &mut HashMap<BExp, bool>, bexp: &BExp) -> bool
 where
     Builder: BottomUpBuilder<'a, BddPtr<'a>>,
 {
-    let b = to_bdd(bdd, b);
-    b.is_false()
+    match cache.get(bexp) {
+        Some(b) => *b,
+        None => {
+            let b = to_bdd(bdd, bexp).is_false();
+            cache.insert(bexp.clone(), b);
+            b
+        }
+    }
 }
 
 pub fn is_equiv<'a, Builder>(bdd: &'a Builder, b1: &BExp, b2: &BExp) -> bool

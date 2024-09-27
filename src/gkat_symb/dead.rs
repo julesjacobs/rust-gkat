@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 use hashconsing::HConsign;
@@ -19,6 +20,7 @@ fn visit_descendants<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
+    cache: &mut HashMap<BExp, bool>,
     dead_states: &HashSet<Exp>,
     explored: &mut HashSet<Exp>,
     exps: Vec<Exp>,
@@ -29,7 +31,7 @@ where
     use VisitResult::*;
     let mut result = Unknown;
     for e in exps {
-        match visit(fb, fp, bdd, dead_states, explored, &e) {
+        match visit(fb, fp, bdd, cache, dead_states, explored, &e) {
             Live => {
                 result = Live;
                 break;
@@ -47,6 +49,7 @@ pub fn visit<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
+    cache: &mut HashMap<BExp, bool>,
     dead_states: &HashSet<Exp>,
     explored: &mut HashSet<Exp>,
     exp: &Exp,
@@ -62,13 +65,19 @@ where
     } else {
         explored.insert(exp.clone());
         let eps = epsilon(fb, exp);
-        if is_false(bdd, &eps) {
+        if is_false(bdd, cache, &eps) {
             let dexp = derivative(fb, fp, exp);
             let next_exps: Vec<Exp> = dexp
                 .into_iter()
-                .filter_map(|(b, (e, _))| if is_false(bdd, &b) { None } else { Some(e) })
+                .filter_map(|(b, (e, _))| {
+                    if is_false(bdd, cache, &b) {
+                        None
+                    } else {
+                        Some(e)
+                    }
+                })
                 .collect();
-            visit_descendants(fb, fp, bdd, dead_states, explored, next_exps)
+            visit_descendants(fb, fp, bdd, cache, dead_states, explored, next_exps)
         } else {
             Live
         }
@@ -79,6 +88,7 @@ pub fn is_dead<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
+    cache: &mut HashMap<BExp, bool>,
     dead_states: &mut HashSet<Exp>,
     exp: &Exp,
 ) -> bool
@@ -87,7 +97,7 @@ where
 {
     use VisitResult::*;
     let mut explored: HashSet<Exp> = HashSet::new();
-    match visit(fb, fp, bdd, dead_states, &mut explored, exp) {
+    match visit(fb, fp, bdd, cache, dead_states, &mut explored, exp) {
         Unknown => {
             dead_states.extend(explored);
             true
