@@ -33,7 +33,7 @@ fn equiv_helper<'a, Builder>(
     cache: &mut HashMap<BExp, BddPtr<'a>>,
     dead_states: &mut HashSet<Exp>,
     explored: &mut HashSet<Exp>,
-    tbl: &mut HashMap<ExpKey, bool>,
+    tbl: &mut HashSet<ExpKey>,
     exp1: &Exp,
     exp2: &Exp,
 ) -> bool
@@ -43,10 +43,7 @@ where
     let reject1 = reject(fb, fp, exp1);
     let reject2 = reject(fb, fp, exp2);
 
-    if tbl
-        .get(&ExpKey(exp1.clone(), exp2.clone()))
-        .is_some_and(|b| *b)
-    {
+    if tbl.contains(&ExpKey(exp1.clone(), exp2.clone())) {
         true
     } else if dead_states.contains(exp1) {
         is_dead(fb, fp, bdd, cache, dead_states, explored, exp2)
@@ -81,8 +78,8 @@ where
                 if is_false(bdd, cache, &mk_and(fb, be1.clone(), be2)) {
                     continue;
                 } else if p == q {
-                    tbl.insert(ExpKey(exp1.clone(), exp2.clone()), true);
-                    tbl.insert(ExpKey(exp2.clone(), exp1.clone()), true);
+                    tbl.insert(ExpKey(exp1.clone(), exp2.clone()));
+                    tbl.insert(ExpKey(exp2.clone(), exp1.clone()));
                     assert3 = assert3
                         && equiv_helper(
                             fb,
@@ -115,7 +112,7 @@ where
 pub fn equiv(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp1: &Exp, exp2: &Exp) -> bool {
     let mut dead_states: HashSet<Exp> = HashSet::new();
     let mut explored: HashSet<Exp> = HashSet::new();
-    let mut tbl: HashMap<ExpKey, bool> = HashMap::new();
+    let mut tbl: HashSet<ExpKey> = HashSet::new();
     let mut cache: HashMap<BExp, BddPtr> = HashMap::new();
     let bdd = RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
     equiv_helper(
