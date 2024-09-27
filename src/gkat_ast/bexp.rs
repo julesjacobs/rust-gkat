@@ -1,13 +1,12 @@
-use std::{
-    collections::HashMap,
-    fmt::Debug,
-    hash::{Hash, Hasher},
-};
-
 use builder::BottomUpBuilder;
+use hashbrown::HashMap;
 use hashconsing::{HConsed, HConsign, HashConsign};
 use repr::{BddPtr, DDNNFPtr, VarLabel};
 use rsdd::*;
+use std::{
+    fmt::Debug,
+    hash::{Hash, Hasher},
+};
 
 #[derive(Clone, Eq)]
 pub struct Name {

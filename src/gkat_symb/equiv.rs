@@ -4,14 +4,14 @@ use crate::gkat_symb::dead::*;
 use crate::gkat_symb::derivative::*;
 use crate::gkat_symb::epsilon::*;
 use disjoint_sets::UnionFindNode;
+use hashbrown::HashMap;
+use hashbrown::HashSet;
 use hashconsing::HConsign;
 use recursive::recursive;
 use rsdd::{
     builder::{bdd::RobddBuilder, cache::AllIteTable, BottomUpBuilder},
     repr::BddPtr,
 };
-use std::collections::HashMap;
-use std::collections::HashSet;
 
 fn exp_uf(tbl: &mut HashMap<Exp, UnionFindNode<()>>, exp: &Exp) -> UnionFindNode<()> {
     match tbl.get(exp) {
@@ -35,11 +35,11 @@ fn reject(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp: &Exp) -> BExp 
 }
 
 #[recursive]
-fn equiv_helper<'a, 'b, Builder>(
+fn equiv_helper<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
-    cache: &'b mut HashMap<BExp, BddPtr<'a>>,
+    cache: &mut HashMap<BExp, BddPtr<'a>>,
     dead_states: &mut HashSet<Exp>,
     explored: &mut HashSet<Exp>,
     tbl: &mut HashMap<Exp, UnionFindNode<()>>,
@@ -120,8 +120,8 @@ pub fn equiv(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp1: &Exp, exp2
     let mut dead_states: HashSet<Exp> = HashSet::new();
     let mut explored: HashSet<Exp> = HashSet::new();
     let mut tbl: HashMap<Exp, UnionFindNode<()>> = HashMap::new();
-    let mut cache: HashMap<BExp, BddPtr> = HashMap::new();
     let bdd = RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
+    let mut cache: HashMap<BExp, BddPtr> = HashMap::new();
     equiv_helper(
         fb,
         fp,

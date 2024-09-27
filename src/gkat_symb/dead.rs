@@ -1,13 +1,11 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
-
-use hashconsing::HConsign;
-use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
-
 use crate::gkat_ast::bexp::*;
 use crate::gkat_ast::exp::*;
 use crate::gkat_symb::derivative::*;
 use crate::gkat_symb::epsilon::*;
+use hashbrown::HashMap;
+use hashbrown::HashSet;
+use hashconsing::HConsign;
+use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
 
 #[derive(Debug, Clone, Copy)]
 pub enum VisitResult {

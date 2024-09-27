@@ -1,7 +1,7 @@
 use crate::*;
+use ahash::AHasher;
 use hashconsing::{HConsed, HConsign, HashConsign};
 use std::{
-    collections::hash_map::DefaultHasher,
     fmt::Debug,
     hash::{Hash, Hasher},
 };
@@ -14,7 +14,7 @@ pub struct Action {
 
 impl Action {
     pub fn mk(s: String) -> Self {
-        let mut hasher = DefaultHasher::new();
+        let mut hasher = AHasher::default();
         s.hash(&mut hasher);
         let id = hasher.finish();
         Action { name: s, id: id }
