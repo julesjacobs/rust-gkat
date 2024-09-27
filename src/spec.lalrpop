@@ -10,19 +10,29 @@ pub BExp: BExp = {
     "1" => BExp::One,
     <s:Name> => BExp::PBool(s),
     "(not" <b:BExp> ")" => BExp::Not(Box::new(b)),
-    "(or" <b1:BExp> <b2:BExp> ")" => BExp::Or(Box::new(b1), Box::new(b2)),
-    "(and" <b1:BExp> <b2:BExp> ")" => BExp::And(Box::new(b1), Box::new(b2)),
+    "(or" <bs:BExp+> <b:BExp> ")" => {
+        bs.into_iter().rfold(b, |acc, p| BExp::Or(Box::new(p), Box::new(acc)))
+    },
+    "(and" <bs:BExp+> <b:BExp> ")" => {
+        bs.into_iter().rfold(b, |acc, p| BExp::And(Box::new(p), Box::new(acc)))
+    },
 };
 
 pub Exp: Exp = {
     <s:Name> => Exp::Act(s),
-    "(seq" <p1:Exp> <p2:Exp> ")" => Exp::Seq(Box::new(p1), Box::new(p2)),
+    "(seq" <ps:Exp+> <p:Exp>")" => {
+        ps.into_iter().rfold(p, |acc, p| Exp::Seq(Box::new(p), Box::new(acc)))
+    },
     "(if" <b:BExp> <p1:Exp> <p2:Exp> ")" => Exp::If(b, Box::new(p1), Box::new(p2)),
     "(test" <b:BExp> ")" => Exp::Test(b),
     "(while" <b:BExp> <p:Exp> ")" => Exp::While(b, Box::new(p))
 };
 
-pub Input: (Exp, Exp) = {
-    "exp1" "{" <e1:Exp> "}"
-    "exp2" "{" <e2:Exp> "}" => (e1, e2)
+pub Equiv: bool = {
+    "(equiv" "0" ")" => false,
+    "(equiv" "1" ")" => true,
+}
+
+pub Input: (Exp, Exp, bool) = {
+    <e1:Exp> <e2:Exp> <b:Equiv> => (e1, e2, b)
 };

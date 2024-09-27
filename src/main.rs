@@ -30,8 +30,10 @@ fn main() {
     let mut fp: HConsign<Exp_> = HConsign::empty();
     let args: Vec<String> = env::args().collect();
     let file = fs::read_to_string(&args[1]).expect("cannot read file");
-    let (exp1, exp2) = parse(file);
+    let (exp1, exp2, b) = parse(file);
     let exp1 = exp1.to_hashcons(&mut nb, &mut fb, &mut fp);
     let exp2 = exp2.to_hashcons(&mut nb, &mut fb, &mut fp);
-    println!("{}", equiv_iter::equiv(&mut fb, &mut fp, &exp1, &exp2))
+    let result = equiv_iter::equiv(&mut fb, &mut fp, &exp1, &exp2);
+    println!("equiv_result = {}", result);
+    assert!(b == result);
 }
