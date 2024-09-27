@@ -85,10 +85,10 @@ where
         }
         let mut assert3 = true;
         for (be1, (next_exp1, p)) in dexp1 {
-            for (be2, (next_exp2, q)) in dexp2.clone() {
-                if is_false(bdd, cache, &mk_and(fb, be1.clone(), be2)) {
+            for (be2, (next_exp2, q)) in &dexp2 {
+                if is_false(bdd, cache, &mk_and(fb, be1.clone(), be2.clone())) {
                     continue;
-                } else if p == q {
+                } else if p == *q {
                     exp1_uf.union(&mut exp2_uf);
                     assert3 = assert3
                         && equiv_helper(
