@@ -10,7 +10,8 @@ use rsdd::{
     builder::{bdd::RobddBuilder, cache::AllIteTable, BottomUpBuilder},
     repr::BddPtr,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 fn exp_uf(tbl: &mut HashMap<Exp, UnionFindNode<()>>, exp: &Exp) -> UnionFindNode<()> {
     match tbl.get(exp) {
@@ -34,11 +35,11 @@ fn reject(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp: &Exp) -> BExp 
 }
 
 #[recursive]
-fn equiv_helper<'a, Builder>(
+fn equiv_helper<'a, 'b, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
-    cache: &mut HashMap<BExp, BddPtr<'a>>,
+    cache: &'b mut HashMap<BExp, BddPtr<'a>>,
     dead_states: &mut HashSet<Exp>,
     explored: &mut HashSet<Exp>,
     tbl: &mut HashMap<Exp, UnionFindNode<()>>,
@@ -69,53 +70,49 @@ where
         if !assert0 {
             return false;
         }
-        let assert1 = dexp2.clone().into_iter().all(|(b0, (exp, _))| {
-            let b1 = mk_and(fb, reject1.clone(), b0);
+        let assert1 = dexp2.iter().all(|(b0, (exp, _))| {
+            let b1 = mk_and(fb, reject1.clone(), b0.clone());
             is_false(bdd, cache, &b1) || is_dead(fb, fp, bdd, cache, dead_states, explored, &exp)
         });
         if !assert1 {
             return false;
         }
-        let assert2 = dexp1.clone().into_iter().all(|(b0, (exp, _))| {
-            let b1 = mk_and(fb, reject2.clone(), b0);
+        let assert2 = dexp1.iter().all(|(b0, (exp, _))| {
+            let b1 = mk_and(fb, reject2.clone(), b0.clone());
             is_false(bdd, cache, &b1) || is_dead(fb, fp, bdd, cache, dead_states, explored, &exp)
         });
         if !assert2 {
             return false;
         }
-        let mut assert3 = true;
+        let mut assert3;
         for (be1, (next_exp1, p)) in dexp1 {
             for (be2, (next_exp2, q)) in &dexp2 {
                 if is_false(bdd, cache, &mk_and(fb, be1.clone(), be2.clone())) {
                     continue;
                 } else if p == *q {
                     exp1_uf.union(&mut exp2_uf);
-                    assert3 = assert3
-                        && equiv_helper(
-                            fb,
-                            fp,
-                            bdd,
-                            cache,
-                            dead_states,
-                            explored,
-                            tbl,
-                            &next_exp1,
-                            &next_exp2,
-                        )
+                    assert3 = equiv_helper(
+                        fb,
+                        fp,
+                        bdd,
+                        cache,
+                        dead_states,
+                        explored,
+                        tbl,
+                        &next_exp1,
+                        &next_exp2,
+                    );
                 } else {
                     let result1 = is_dead(fb, fp, bdd, cache, dead_states, explored, &next_exp1);
                     let result2 = is_dead(fb, fp, bdd, cache, dead_states, explored, &next_exp2);
-                    assert3 = assert3 && (result1 && result2)
+                    assert3 = result1 && result2;
                 }
                 if !assert3 {
-                    break;
+                    return false;
                 }
             }
-            if !assert3 {
-                break;
-            }
         }
-        assert3
+        true
     }
 }
 

@@ -1,10 +1,10 @@
 use std::{
-    collections::{hash_map::DefaultHasher, HashMap},
+    collections::HashMap,
     fmt::Debug,
-    hash::{self, Hash, Hasher},
+    hash::{Hash, Hasher},
 };
 
-use builder::{cache, BottomUpBuilder};
+use builder::BottomUpBuilder;
 use hashconsing::{HConsed, HConsign, HashConsign};
 use repr::{BddPtr, DDNNFPtr, VarLabel};
 use rsdd::*;

@@ -1,8 +1,7 @@
-use bexp::NameBuilder;
-use exp::{mk_act, mk_if, mk_seq, mk_test, mk_while, Action};
-use hashconsing::HConsign;
-
 use crate::{gkat_ast::*, mk_and, mk_not, mk_one, mk_or, mk_pbool, mk_zero, BExp_, Exp_};
+use bexp::NameBuilder;
+use exp::{mk_act, mk_if, mk_seq, mk_test, mk_while};
+use hashconsing::HConsign;
 
 #[derive(Debug, Clone)]
 pub enum BExp {
