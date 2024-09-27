@@ -3,7 +3,7 @@ use std::{
     hash::{self, Hash, Hasher},
 };
 
-use builder::BottomUpBuilder;
+use builder::{cache, BottomUpBuilder};
 use hashconsing::{HConsed, HConsign, HashConsign};
 use repr::{BddPtr, DDNNFPtr, VarLabel};
 use rsdd::*;
@@ -120,51 +120,66 @@ pub fn mk_not(fb: &mut HConsign<BExp_>, b1: BExp) -> BExp {
     }
 }
 
-pub fn to_bdd<'a, Builder>(bdd: &'a Builder, b: &BExp) -> BddPtr<'a>
+pub fn to_bdd<'a, Builder>(
+    bdd: &'a Builder,
+    cache: &mut HashMap<BExp, BddPtr<'a>>,
+    bexp: &BExp,
+) -> BddPtr<'a>
 where
     Builder: BottomUpBuilder<'a, BddPtr<'a>>,
 {
     use BExp_::*;
-    match b.get() {
-        One => bdd.true_ptr(),
-        Zero => bdd.false_ptr(),
-        PBool(n) => bdd.var(VarLabel::new(n.id), true),
-        Or(b1, b2) => {
-            let b1 = to_bdd(bdd, b1);
-            let b2 = to_bdd(bdd, b2);
-            bdd.or(b1, b2)
-        }
-        And(b1, b2) => {
-            let b1 = to_bdd(bdd, b1);
-            let b2 = to_bdd(bdd, b2);
-            bdd.and(b1, b2)
-        }
-        Not(b) => {
-            let b = to_bdd(bdd, b);
-            bdd.negate(b)
-        }
-    }
-}
-
-pub fn is_false<'a, Builder>(bdd: &'a Builder, cache: &mut HashMap<BExp, bool>, bexp: &BExp) -> bool
-where
-    Builder: BottomUpBuilder<'a, BddPtr<'a>>,
-{
     match cache.get(bexp) {
         Some(b) => *b,
         None => {
-            let b = to_bdd(bdd, bexp).is_false();
+            let b = match bexp.get() {
+                One => bdd.true_ptr(),
+                Zero => bdd.false_ptr(),
+                PBool(n) => bdd.var(VarLabel::new(n.id), true),
+                Or(b1, b2) => {
+                    let b1 = to_bdd(bdd, cache, b1);
+                    let b2 = to_bdd(bdd, cache, b2);
+                    bdd.or(b1, b2)
+                }
+                And(b1, b2) => {
+                    let b1 = to_bdd(bdd, cache, b1);
+                    let b2 = to_bdd(bdd, cache, b2);
+                    bdd.and(b1, b2)
+                }
+                Not(b) => {
+                    let b = to_bdd(bdd, cache, b);
+                    bdd.negate(b)
+                }
+            };
             cache.insert(bexp.clone(), b);
             b
         }
     }
 }
 
-pub fn is_equiv<'a, Builder>(bdd: &'a Builder, b1: &BExp, b2: &BExp) -> bool
+pub fn is_false<'a, Builder>(
+    bdd: &'a Builder,
+    cache: &mut HashMap<BExp, BddPtr<'a>>,
+    bexp: &BExp,
+) -> bool
 where
     Builder: BottomUpBuilder<'a, BddPtr<'a>>,
 {
-    let b1 = to_bdd(bdd, b1);
-    let b2 = to_bdd(bdd, b2);
+    let b = to_bdd(bdd, cache, bexp);
+    cache.insert(bexp.clone(), b);
+    b.is_false()
+}
+
+pub fn is_equiv<'a, Builder>(
+    bdd: &'a Builder,
+    cache: &mut HashMap<BExp, BddPtr<'a>>,
+    b1: &BExp,
+    b2: &BExp,
+) -> bool
+where
+    Builder: BottomUpBuilder<'a, BddPtr<'a>>,
+{
+    let b1 = to_bdd(bdd, cache, b1);
+    let b2 = to_bdd(bdd, cache, b2);
     b1 == b2
 }

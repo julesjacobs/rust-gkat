@@ -20,7 +20,7 @@ fn visit_descendants<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
-    cache: &mut HashMap<BExp, bool>,
+    cache: &mut HashMap<BExp, BddPtr<'a>>,
     dead_states: &HashSet<Exp>,
     explored: &mut HashSet<Exp>,
     exps: Vec<Exp>,
@@ -49,7 +49,7 @@ pub fn visit<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
-    cache: &mut HashMap<BExp, bool>,
+    cache: &mut HashMap<BExp, BddPtr<'a>>,
     dead_states: &HashSet<Exp>,
     explored: &mut HashSet<Exp>,
     exp: &Exp,
@@ -88,18 +88,20 @@ pub fn is_dead<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
     bdd: &'a Builder,
-    cache: &mut HashMap<BExp, bool>,
+    cache: &mut HashMap<BExp, BddPtr<'a>>,
     dead_states: &mut HashSet<Exp>,
+    explored: &mut HashSet<Exp>,
     exp: &Exp,
 ) -> bool
 where
     Builder: BottomUpBuilder<'a, BddPtr<'a>>,
 {
     use VisitResult::*;
-    let mut explored: HashSet<Exp> = HashSet::new();
-    match visit(fb, fp, bdd, cache, dead_states, &mut explored, exp) {
+    match visit(fb, fp, bdd, cache, dead_states, explored, exp) {
         Unknown => {
-            dead_states.extend(explored);
+            for x in explored.iter() {
+                dead_states.insert(x.clone());
+            }
             true
         }
         Live => false,
