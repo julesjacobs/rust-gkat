@@ -20,7 +20,6 @@ lalrpop = "0.21.0"
 [dependencies]
 recursive = "0.1.1"
 rsdd = { git = "https://github.com/neuppl/rsdd" }
-disjoint-sets = "0.4.2"
 hashconsing = "1.6.0"
 lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
 

@@ -2,10 +2,11 @@ use crate::*;
 use hashconsing::{HConsed, HConsign, HashConsign};
 use std::{
     collections::hash_map::DefaultHasher,
+    fmt::Debug,
     hash::{Hash, Hasher},
 };
 
-#[derive(Debug, Clone, Eq)]
+#[derive(Clone, Eq)]
 pub struct Action {
     name: String,
     id: u64,
@@ -17,6 +18,12 @@ impl Action {
         s.hash(&mut hasher);
         let id = hasher.finish();
         Action { name: s, id: id }
+    }
+}
+
+impl Debug for Action {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Action").field(&self.name).finish()
     }
 }
 

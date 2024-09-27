@@ -1,5 +1,6 @@
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
+    fmt::Debug,
     hash::{self, Hash, Hasher},
 };
 
@@ -8,10 +9,16 @@ use hashconsing::{HConsed, HConsign, HashConsign};
 use repr::{BddPtr, DDNNFPtr, VarLabel};
 use rsdd::*;
 
-#[derive(Debug, Clone, Eq)]
+#[derive(Clone, Eq)]
 pub struct Name {
     name: String,
     id: u64,
+}
+
+impl Debug for Name {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Name").field(&self.name).finish()
+    }
 }
 
 pub struct NameBuilder {
