@@ -10,7 +10,6 @@ use rsdd::{
     builder::{bdd::RobddBuilder, cache::AllIteTable, BottomUpBuilder},
     repr::BddPtr,
 };
-use std::collections::VecDeque;
 use std::collections::{HashMap, HashSet};
 
 #[derive(PartialEq, Eq, Hash)]
