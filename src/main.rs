@@ -33,5 +33,5 @@ fn main() {
     let (exp1, exp2) = parse(file);
     let exp1 = exp1.to_hashcons(&mut nb, &mut fb, &mut fp);
     let exp2 = exp2.to_hashcons(&mut nb, &mut fb, &mut fp);
-    println!("{}", equiv::equiv(&mut fb, &mut fp, &exp1, &exp2))
+    println!("{}", equiv_iter::equiv(&mut fb, &mut fp, &exp1, &exp2))
 }

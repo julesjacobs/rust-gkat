@@ -1,9 +1,9 @@
 use crate::gkat_ast::bexp::*;
-use crate::gkat_ast::exp;
 use crate::gkat_ast::exp::*;
 use crate::gkat_symb::dead::*;
 use crate::gkat_symb::derivative::*;
 use crate::gkat_symb::epsilon::*;
+use disjoint_sets::UnionFindNode;
 use hashconsing::HConsign;
 use recursive::recursive;
 use rsdd::{
@@ -11,6 +11,17 @@ use rsdd::{
     repr::BddPtr,
 };
 use std::collections::{HashMap, HashSet};
+
+fn exp_uf(tbl: &mut HashMap<Exp, UnionFindNode<()>>, exp: &Exp) -> UnionFindNode<()> {
+    match tbl.get(exp) {
+        Some(node) => node.clone(),
+        None => {
+            let node = UnionFindNode::new(());
+            tbl.insert(exp.clone(), node.clone());
+            node
+        }
+    }
+}
 
 fn reject(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp: &Exp) -> BExp {
     let dexp = derivative(fb, fp, exp);
@@ -22,9 +33,6 @@ fn reject(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp: &Exp) -> BExp 
     mk_and(fb, not_epsilon, not_transitions)
 }
 
-#[derive(PartialEq, Eq, Hash)]
-struct ExpKey(Exp, Exp);
-
 #[recursive]
 fn equiv_helper<'a, Builder>(
     fb: &mut HConsign<BExp_>,
@@ -33,7 +41,7 @@ fn equiv_helper<'a, Builder>(
     cache: &mut HashMap<BExp, BddPtr<'a>>,
     dead_states: &mut HashSet<Exp>,
     explored: &mut HashSet<Exp>,
-    tbl: &mut HashSet<ExpKey>,
+    tbl: &mut HashMap<Exp, UnionFindNode<()>>,
     exp1: &Exp,
     exp2: &Exp,
 ) -> bool
@@ -43,7 +51,10 @@ where
     let reject1 = reject(fb, fp, exp1);
     let reject2 = reject(fb, fp, exp2);
 
-    if tbl.contains(&ExpKey(exp1.clone(), exp2.clone())) {
+    let mut exp1_uf = exp_uf(tbl, exp1);
+    let mut exp2_uf = exp_uf(tbl, exp2);
+
+    if exp1_uf.equiv(&exp2_uf) {
         true
     } else if dead_states.contains(exp1) {
         is_dead(fb, fp, bdd, cache, dead_states, explored, exp2)
@@ -78,8 +89,7 @@ where
                 if is_false(bdd, cache, &mk_and(fb, be1.clone(), be2)) {
                     continue;
                 } else if p == q {
-                    tbl.insert(ExpKey(exp1.clone(), exp2.clone()));
-                    tbl.insert(ExpKey(exp2.clone(), exp1.clone()));
+                    exp1_uf.union(&mut exp2_uf);
                     assert3 = assert3
                         && equiv_helper(
                             fb,
@@ -112,7 +122,7 @@ where
 pub fn equiv(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp1: &Exp, exp2: &Exp) -> bool {
     let mut dead_states: HashSet<Exp> = HashSet::new();
     let mut explored: HashSet<Exp> = HashSet::new();
-    let mut tbl: HashSet<ExpKey> = HashSet::new();
+    let mut tbl: HashMap<Exp, UnionFindNode<()>> = HashMap::new();
     let mut cache: HashMap<BExp, BddPtr> = HashMap::new();
     let bdd = RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
     equiv_helper(
