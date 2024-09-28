@@ -1,11 +1,7 @@
-use crate::gkat_ast::bexp::*;
-use crate::gkat_ast::exp::*;
-use crate::gkat_symb::dead::*;
-use crate::gkat_symb::derivative::*;
-use crate::gkat_symb::epsilon::*;
+use super::{dead::*, derivative::*, epsilon::*};
+use crate::gkat_ast::*;
 use disjoint_sets::UnionFindNode;
-use hashbrown::HashMap;
-use hashbrown::HashSet;
+use hashbrown::{HashMap, HashSet};
 use hashconsing::HConsign;
 use recursive::recursive;
 use rsdd::{

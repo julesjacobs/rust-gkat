@@ -1,9 +1,6 @@
-use crate::gkat_ast::bexp::*;
-use crate::gkat_ast::exp::*;
-use crate::gkat_symb::derivative::*;
-use crate::gkat_symb::epsilon::*;
-use hashbrown::HashMap;
-use hashbrown::HashSet;
+use super::{derivative::*, epsilon::*};
+use crate::gkat_ast::*;
+use hashbrown::{HashMap, HashSet};
 use hashconsing::HConsign;
 use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
 

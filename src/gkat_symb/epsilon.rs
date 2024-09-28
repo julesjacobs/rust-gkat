@@ -1,5 +1,4 @@
-use crate::gkat_ast::bexp::*;
-use crate::gkat_ast::exp::*;
+use crate::gkat_ast::*;
 use hashconsing::HConsign;
 
 pub fn epsilon(fb: &mut HConsign<BExp_>, m: &Exp) -> BExp {

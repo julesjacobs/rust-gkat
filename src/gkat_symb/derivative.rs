@@ -1,6 +1,5 @@
-use crate::gkat_ast::bexp::*;
-use crate::gkat_ast::exp::*;
-use crate::gkat_symb::epsilon::*;
+use super::epsilon::*;
+use crate::gkat_ast::*;
 use hashconsing::HConsign;
 
 fn combine_bexp_with(

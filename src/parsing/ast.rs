@@ -1,6 +1,4 @@
-use crate::{gkat_ast::*, mk_and, mk_not, mk_one, mk_or, mk_pbool, mk_zero, BExp_, Exp_};
-use bexp::NameBuilder;
-use exp::{mk_act, mk_if, mk_seq, mk_test, mk_while};
+use crate::gkat_ast::{self, *};
 use hashconsing::HConsign;
 
 #[derive(Debug, Clone)]
@@ -23,7 +21,7 @@ pub enum Exp {
 }
 
 impl BExp {
-    pub fn to_hashcons(self, nb: &mut NameBuilder, fb: &mut HConsign<BExp_>) -> bexp::BExp {
+    pub fn to_hashcons(self, nb: &mut NameBuilder, fb: &mut HConsign<BExp_>) -> gkat_ast::BExp {
         match self {
             Self::Zero => mk_zero(fb),
             Self::One => mk_one(fb),
@@ -52,7 +50,7 @@ impl Exp {
         nb: &mut NameBuilder,
         fb: &mut HConsign<BExp_>,
         fp: &mut HConsign<Exp_>,
-    ) -> exp::Exp {
+    ) -> gkat_ast::Exp {
         match self {
             Self::Act(s) => mk_act(fp, s),
             Self::Seq(p1, p2) => {
