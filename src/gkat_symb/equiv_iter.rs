@@ -3,7 +3,6 @@ use crate::gkat_ast::*;
 use disjoint_sets::UnionFindNode;
 use hashbrown::{HashMap, HashSet};
 use hashconsing::HConsign;
-use recursive::recursive;
 use rsdd::{
     builder::{bdd::RobddBuilder, cache::AllIteTable, BottomUpBuilder},
     repr::BddPtr,
@@ -33,7 +32,6 @@ fn reject(fb: &mut HConsign<BExp_>, fp: &mut HConsign<Exp_>, exp: &Exp) -> BExp 
     mk_and(fb, not_epsilon, not_transitions)
 }
 
-#[recursive]
 fn equiv_helper<'a, Builder>(
     fb: &mut HConsign<BExp_>,
     fp: &mut HConsign<Exp_>,
