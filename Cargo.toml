@@ -9,6 +9,11 @@ overflow-checks = false
 opt-level = 3
 debug = true
 
+[profile.test]
+overflow-checks = false
+opt-level = 3
+debug = true
+
 [profile.release]
 overflow-checks = false
 opt-level = 3
