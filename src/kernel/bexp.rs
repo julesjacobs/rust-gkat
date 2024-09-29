@@ -12,8 +12,8 @@ use std::{
 
 #[derive(Clone, Eq)]
 pub struct Name {
-    pub(super) name: String,
-    pub(super) id: u64,
+    name: String,
+    id: u64,
 }
 
 impl Debug for Name {
