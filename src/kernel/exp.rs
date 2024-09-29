@@ -15,12 +15,6 @@ pub struct Action {
     pub(super) id: u64,
 }
 
-impl Action {
-    pub fn new(s: String, x: u64) -> Self {
-        Action { name: s, id: x }
-    }
-}
-
 impl Debug for Action {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("Action").field(&self.name).finish()
