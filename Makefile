@@ -1,7 +1,12 @@
 INPUT := $(shell  find dataset -name '*.txt')
-DUMMY := $(subst dataset/,dummy/,$(INPUT))
+BDD := $(subst dataset/,bdd/,$(INPUT))
+SDD := $(subst dataset/,sdd/,$(INPUT))
 
-dummy/%.txt: dataset/%.txt 
-	./target/release/rust-gkat $<
+bdd/%.txt: dataset/%.txt 
+	./target/release/rust-gkat -m bdd $<
 
-all: $(DUMMY)
+sdd/%.txt: dataset/%.txt 
+	./target/release/rust-gkat -m sdd $<
+
+bdd: $(BDD)
+sdd: $(SDD)
