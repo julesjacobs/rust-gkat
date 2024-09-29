@@ -4,11 +4,10 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-#[non_exhaustive]
 #[derive(Clone, Eq)]
 pub struct Name {
-    pub name: String,
-    pub id: u64,
+    pub(super) name: String,
+    pub(super) id: u64,
 }
 
 impl Debug for Name {
@@ -41,11 +40,10 @@ pub enum BExp_ {
     Not(BExp),
 }
 
-#[non_exhaustive]
 #[derive(Clone, Eq)]
 pub struct Action {
-    pub name: String,
-    pub id: u64,
+    pub(super) name: String,
+    pub(super) id: u64,
 }
 
 impl Action {
