@@ -2,9 +2,53 @@ use super::*;
 use crate::parsing;
 use ahash::AHasher;
 use disjoint_sets::UnionFindNode;
-use hashconsing::HashConsign;
+use hashconsing::{HConsed, HashConsign};
 use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
-use std::hash::{Hash, Hasher};
+use std::{
+    fmt::Debug,
+    hash::{Hash, Hasher},
+};
+
+#[derive(Clone, Eq)]
+pub struct Action {
+    pub(super) name: String,
+    pub(super) id: u64,
+}
+
+impl Action {
+    pub fn new(s: String, x: u64) -> Self {
+        Action { name: s, id: x }
+    }
+}
+
+impl Debug for Action {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Action").field(&self.name).finish()
+    }
+}
+
+impl PartialEq for Action {
+    fn eq(&self, rhs: &Action) -> bool {
+        self.id == rhs.id
+    }
+}
+
+impl Hash for Action {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_u64(self.id);
+    }
+}
+
+pub type Exp = HConsed<Exp_>;
+
+#[derive(Debug, Hash, Clone, PartialEq, Eq)]
+pub enum Exp_ {
+    Act(Action),
+    Seq(Exp, Exp),
+    If(BExp, Exp, Exp),
+    Test(BExp),
+    While(BExp, Exp),
+}
 
 impl<'a, Builder: BottomUpBuilder<'a, BddPtr<'a>>> GkatManager<'a, Builder> {
     fn mk_action(&mut self, s: String) -> Action {

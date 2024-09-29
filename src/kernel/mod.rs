@@ -1,4 +1,3 @@
-mod ast;
 mod bexp;
 mod derivative;
 mod equiv;
@@ -7,5 +6,6 @@ mod exp;
 mod manager;
 mod search;
 
-pub use ast::*;
+pub use bexp::*;
+pub use exp::*;
 pub use manager::*;
