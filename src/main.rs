@@ -1,28 +1,51 @@
 mod kernel;
 mod parsing;
 
+use clap::{Parser, ValueEnum};
 use kernel::*;
 use parsing::*;
 use rsdd::{
-    builder::{self, cache::AllIteTable, sdd},
-    repr::{BddPtr, VTree, VTreeManager, VarLabel},
-    util::btree::BTree,
+    builder::{self, cache::AllIteTable},
+    repr::{BddPtr, VTree, VarLabel},
 };
-use std::{env, fs};
+use std::fs;
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum Mode {
+    Bdd,
+    Sdd,
+}
+
+#[derive(Parser, Debug)]
+struct Args {
+    #[arg(short, long, value_enum, default_value_t = Mode::Bdd)]
+    mode: Mode,
+    input: String,
+}
 
 fn main() {
-    let order: Vec<VarLabel> = (0..1024).map(|x| VarLabel::new(x as u64)).collect();
-    let vtree = VTree::even_split(&order, 4);
-    let builder = builder::sdd::CompressionSddBuilder::new(vtree);
-    // let builder =
-    //     rsdd::builder::bdd::RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
-    let mut gkat = GkatManager::new(&builder);
-    let args: Vec<String> = env::args().collect();
-    let file = fs::read_to_string(&args[1]).expect("cannot read file");
+    let args = Args::parse();
+    let file = fs::read_to_string(args.input).expect("cannot read file");
     let (exp1, exp2, b) = parse(file);
-    let exp1 = gkat.from_exp(exp1);
-    let exp2 = gkat.from_exp(exp2);
-    let result = gkat.equiv_iter(&exp1, &exp2);
+    let result = match args.mode {
+        Mode::Bdd => {
+            let builder =
+                builder::bdd::RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
+            let mut gkat = GkatManager::new(&builder);
+            let exp1 = gkat.from_exp(exp1);
+            let exp2 = gkat.from_exp(exp2);
+            gkat.equiv_iter(&exp1, &exp2)
+        }
+        Mode::Sdd => {
+            let order: Vec<VarLabel> = (0..1024).map(|x| VarLabel::new(x as u64)).collect();
+            let vtree = VTree::right_linear(&order);
+            let builder = builder::sdd::CompressionSddBuilder::new(vtree);
+            let mut gkat = GkatManager::new(&builder);
+            let exp1 = gkat.from_exp(exp1);
+            let exp2 = gkat.from_exp(exp2);
+            gkat.equiv_iter(&exp1, &exp2)
+        }
+    };
     println!("equiv_expected = {}", b);
     println!("equiv_result   = {}", result);
     assert!(b == result);

@@ -3,7 +3,7 @@ use crate::parsing;
 use hashconsing::{HConsed, HashConsign};
 use rsdd::{
     builder::BottomUpBuilder,
-    repr::{DDNNFPtr, SddPtr, VarLabel},
+    repr::{DDNNFPtr, VarLabel},
 };
 use std::{
     fmt::Debug,

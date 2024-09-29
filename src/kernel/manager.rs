@@ -3,7 +3,7 @@ use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
 use hashconsing::HConsign;
 use rsdd::builder::BottomUpBuilder;
-use rsdd::repr::{BddPtr, DDNNFPtr, SddPtr};
+use rsdd::repr::DDNNFPtr;
 
 pub struct GkatManager<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> {
     // bexp states
