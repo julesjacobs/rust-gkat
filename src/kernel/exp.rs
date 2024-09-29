@@ -3,7 +3,7 @@ use crate::parsing;
 use ahash::AHasher;
 use disjoint_sets::UnionFindNode;
 use hashconsing::{HConsed, HashConsign};
-use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
+use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 use std::{
     fmt::Debug,
     hash::{Hash, Hasher},
@@ -44,7 +44,7 @@ pub enum Exp_ {
     While(BExp, Exp),
 }
 
-impl<'a, Builder: BottomUpBuilder<'a, BddPtr<'a>>> GkatManager<'a, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
     fn mk_action(&mut self, s: String) -> Action {
         let mut hasher = AHasher::default();
         s.hash(&mut hasher);

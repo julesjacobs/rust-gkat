@@ -1,5 +1,5 @@
 use super::*;
-use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
+use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
 #[derive(Debug, Clone, Copy)]
 pub enum VisitResult {
@@ -8,7 +8,7 @@ pub enum VisitResult {
     Unknown,
 }
 
-impl<'a, Builder: BottomUpBuilder<'a, BddPtr<'a>>> GkatManager<'a, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
     pub fn reject(&mut self, exp: &Exp) -> BExp {
         let dexp = self.derivative(exp);
         let eps = self.epsilon(exp);

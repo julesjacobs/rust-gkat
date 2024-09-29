@@ -3,7 +3,7 @@ use crate::parsing;
 use hashconsing::{HConsed, HashConsign};
 use rsdd::{
     builder::BottomUpBuilder,
-    repr::{BddPtr, DDNNFPtr, VarLabel},
+    repr::{DDNNFPtr, SddPtr, VarLabel},
 };
 use std::{
     fmt::Debug,
@@ -46,7 +46,7 @@ pub enum BExp_ {
     Not(BExp),
 }
 
-impl<'a, Builder: BottomUpBuilder<'a, BddPtr<'a>>> GkatManager<'a, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
     fn mk_name(&mut self, s: String) -> Name {
         match self.name_map.get(&s) {
             Some(id) => Name { name: s, id: *id },
@@ -145,7 +145,7 @@ impl<'a, Builder: BottomUpBuilder<'a, BddPtr<'a>>> GkatManager<'a, Builder> {
         }
     }
 
-    pub fn to_bdd(&mut self, bexp: &BExp) -> BddPtr<'a> {
+    pub fn to_bdd(&mut self, bexp: &BExp) -> Ptr {
         use BExp_::*;
         match self.bexp_cache.get(bexp) {
             Some(b) => *b,

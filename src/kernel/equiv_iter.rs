@@ -1,7 +1,7 @@
 use super::*;
-use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
+use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, Builder: BottomUpBuilder<'a, BddPtr<'a>>> GkatManager<'a, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
     pub fn equiv_iter(&mut self, exp1: &Exp, exp2: &Exp) -> bool {
         let mut queue = Vec::new();
         queue.push((exp1.clone(), exp2.clone()));

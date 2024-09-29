@@ -1,8 +1,8 @@
 use super::*;
 use recursive::recursive;
-use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
+use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, Builder: BottomUpBuilder<'a, BddPtr<'a>>> GkatManager<'a, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
     #[recursive]
     pub fn equiv(&mut self, exp1: &Exp, exp2: &Exp) -> bool {
         let reject1 = self.reject(exp1);

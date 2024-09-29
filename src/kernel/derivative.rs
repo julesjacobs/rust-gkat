@@ -1,7 +1,7 @@
 use super::*;
-use rsdd::{builder::BottomUpBuilder, repr::BddPtr};
+use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, Builder: BottomUpBuilder<'a, BddPtr<'a>>> GkatManager<'a, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
     pub fn epsilon(&mut self, m: &Exp) -> BExp {
         use Exp_::*;
         match m.get() {
