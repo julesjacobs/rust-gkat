@@ -145,7 +145,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         }
     }
 
-    pub fn to_bdd(&mut self, bexp: &BExp) -> Ptr {
+    pub fn to_ptr(&mut self, bexp: &BExp) -> Ptr {
         use BExp_::*;
         match self.bexp_cache.get(bexp) {
             Some(b) => *b,
@@ -155,17 +155,17 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
                     Zero => self.bexp_builder.false_ptr(),
                     PBool(n) => self.bexp_builder.var(VarLabel::new(n.id), true),
                     Or(b1, b2) => {
-                        let b1 = self.to_bdd(b1);
-                        let b2 = self.to_bdd(b2);
+                        let b1 = self.to_ptr(b1);
+                        let b2 = self.to_ptr(b2);
                         self.bexp_builder.or(b1, b2)
                     }
                     And(b1, b2) => {
-                        let b1 = self.to_bdd(b1);
-                        let b2 = self.to_bdd(b2);
+                        let b1 = self.to_ptr(b1);
+                        let b2 = self.to_ptr(b2);
                         self.bexp_builder.and(b1, b2)
                     }
                     Not(b) => {
-                        let b = self.to_bdd(b);
+                        let b = self.to_ptr(b);
                         self.bexp_builder.negate(b)
                     }
                 };
@@ -176,14 +176,14 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
     }
 
     pub fn is_false(&mut self, bexp: &BExp) -> bool {
-        let b = self.to_bdd(bexp);
+        let b = self.to_ptr(bexp);
         self.bexp_cache.insert(bexp.clone(), b);
         b.is_false()
     }
 
     pub fn is_equiv(&mut self, bexp1: &BExp, bexp2: &BExp) -> bool {
-        let b1 = self.to_bdd(bexp1);
-        let b2 = self.to_bdd(bexp2);
+        let b1 = self.to_ptr(bexp1);
+        let b2 = self.to_ptr(bexp2);
         b1 == b2
     }
 }
