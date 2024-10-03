@@ -58,7 +58,7 @@ For n-ary syntax such `(seq A B C)`, it is parsed right-associatively into binar
 ## Performance and Evaluation
 Currently, we have tested `rust-gkat` on all large GKAT pairs contained in  `dataset.zip`.
 
-Even for difficult examples such as `exp9000.txt`, we achieve a competitive runtime of `2.70s` and peak memory consumption of only `8.5MB`.
+Even for difficult examples such as `exp9000.txt`, we achieve a very competitive runtime of `2.70s` and peak memory consumption of only `8.5MB`.
 ```
 ❯ /usr/bin/time -l target/release/rust-gkat -m bdd exp9000.txt
 equiv_expected = true
