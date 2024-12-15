@@ -1,11 +1,11 @@
-INPUT := $(shell  find input -name '*.txt')
-BDD := $(subst input/,bdd/,$(INPUT))
-SDD := $(subst input/,sdd/,$(INPUT))
+INPUT := $(shell  find dataset -name '*.txt')
+BDD := $(subst dataset/,bdd/,$(INPUT))
+SDD := $(subst dataset/,sdd/,$(INPUT))
 
-bdd/%.txt: input/%.txt 
+bdd/%.txt: dataset/%.txt 
 	time ./target/release/rust-gkat -m bdd $<
 
-sdd/%.txt: input/%.txt 
+sdd/%.txt: dataset/%.txt 
 	time ./target/release/rust-gkat -m sdd $<
 
 bdd: $(BDD)

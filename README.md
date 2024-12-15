@@ -1,8 +1,10 @@
 # Symbolic GKAT Equivalence 
-This repository implements Zhang's symbolic [GKAT](https://dl.acm.org/doi/10.1145/3371129) equivalence algorithm.
+This repository implements Zhang's symbolic
+[GKAT](https://dl.acm.org/doi/10.1145/3371129) equivalence algorithm.
 
 ## Building
-Requires the `cargo` build tool for the [Rust](https://www.rust-lang.org/) programming language.
+Requires the `cargo` build tool for the [Rust](https://www.rust-lang.org/)
+programming language.
 
 To build the equivalence checker:
 ``` sh
@@ -20,8 +22,6 @@ rust-gkat -m bdd ./input/test00.txt
 ``` sh
 rust-gkat -m sdd ./input/test00.txt
 ```
-
-One can also use `make bdd` or `make sdd` to run `rust-gkat` on all sample inputs.
 
 ## Input Format
 Each input file consists of 3 s-expressions. The first 2 s-expressions are the
@@ -53,23 +53,27 @@ Sample from `input/test10.txt`:
 (equiv 1)
 ```
 
-For n-ary syntax such `(seq A B C)`, it is parsed right-associatively into binary form as `(seq A (seq B C))`.
+For n-ary syntax such `(seq A B C)`, it is parsed right-associatively into
+binary form as `(seq A (seq B C))`.
 
 ## Performance and Evaluation
-Currently, we have tested `rust-gkat` on all large GKAT pairs contained in  `dataset.zip`.
+Currently, we have tested `rust-gkat` on all large GKAT pairs contained in
+`dataset.zip`.  One can also use `make bdd` or `make sdd` to run `rust-gkat` on
+all examples in the dataset.
 
-Even for difficult examples such as `exp9000.txt`, we achieve a very competitive runtime of `2.70s` and peak memory consumption of only `8.5MB`.
+Even for difficult examples such as `exp9000.txt`, we achieve a very competitive
+runtime of `0.07s` and peak memory consumption of only `20MB`.
 ```
-❯ /usr/bin/time -l target/release/rust-gkat -m bdd exp9000.txt
+➞  /usr/bin/time -l target/release/rust-gkat -m bdd ./dataset/exp9000.txt
 equiv_expected = true
 equiv_result   = true
-        2.70 real         2.67 user         0.01 sys
-             9584640  maximum resident set size
+        0.07 real         0.06 user         0.00 sys
+            19398656  maximum resident set size
                    0  average shared memory size
                    0  average unshared data size
                    0  average unshared stack size
-                 692  page reclaims
-                   4  page faults
+                1315  page reclaims
+                   3  page faults
                    0  swaps
                    0  block input operations
                    0  block output operations
@@ -77,8 +81,8 @@ equiv_result   = true
                    0  messages received
                    0  signals received
                    0  voluntary context switches
-                 374  involuntary context switches
-         26013509602  instructions retired
-          8528568663  cycles elapsed
-             8504384  peak memory footprint
+                  17  involuntary context switches
+          1314991152  instructions retired
+           234181996  cycles elapsed
+            18268424  peak memory footprint
 ```

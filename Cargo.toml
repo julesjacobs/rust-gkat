@@ -29,3 +29,4 @@ disjoint-sets = "0.4.2"
 rsdd = { git = "https://github.com/neuppl/rsdd" }
 lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
 clap = { version = "4.5.18", features = ["derive"] }
+lru = "0.12.5"

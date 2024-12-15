@@ -80,8 +80,11 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
     }
 
     pub fn derivative(&mut self, exp: &Exp<Ptr>) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
+        if let Some(deriv) = self.deriv_cache.get(exp) {
+            return deriv.clone();
+        }
         use Exp_::*;
-        match exp.get() {
+        let deriv = match exp.get() {
             Test(_) => vec![],
             Act(n) => {
                 let one_exp = self.mk_one();
@@ -110,6 +113,8 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
                 let dexp = self.derivative(p);
                 self.while_helper(be, p, dexp)
             }
-        }
+        };
+        self.deriv_cache.put(exp.clone(), deriv.clone());
+        return deriv;
     }
 }
