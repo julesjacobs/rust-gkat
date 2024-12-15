@@ -1,128 +1,79 @@
 use super::*;
 use crate::parsing;
-use hashconsing::{HConsed, HashConsign};
 use rsdd::{
     builder::BottomUpBuilder,
     repr::{DDNNFPtr, VarLabel},
 };
-use std::{
-    fmt::Debug,
-    hash::{Hash, Hasher},
-};
-
-#[derive(Clone, Eq)]
-pub struct Name {
-    name: String,
-    id: u64,
-}
-
-impl Debug for Name {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("Name").field(&self.name).finish()
-    }
-}
-
-impl PartialEq for Name {
-    fn eq(&self, rhs: &Name) -> bool {
-        self.id == rhs.id
-    }
-}
-
-impl Hash for Name {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_u64(self.id);
-    }
-}
-
-pub type BExp = HConsed<BExp_>;
-
-#[derive(Debug, Hash, Clone, PartialEq, Eq)]
-pub enum BExp_ {
-    Zero,
-    One,
-    PBool(Name),
-    Or(BExp, BExp),
-    And(BExp, BExp),
-    Not(BExp),
-}
 
 impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
-    fn mk_name(&mut self, s: String) -> Name {
+    fn mk_name(&mut self, s: String) -> VarLabel {
         match self.name_map.get(&s) {
-            Some(id) => Name { name: s, id: *id },
+            Some(x) => x.clone(),
             None => {
                 self.name_stamp += 1;
-                self.name_map.insert(s.clone(), self.name_stamp);
-                Name {
-                    name: s,
-                    id: self.name_stamp,
-                }
+                let x = VarLabel::new(self.name_stamp);
+                self.name_map.insert(s.clone(), x.clone());
+                x
             }
         }
     }
 
-    pub fn mk_zero(&mut self) -> BExp {
-        self.bexp_hcons.mk(BExp_::Zero)
+    pub fn mk_zero(&mut self) -> Ptr {
+        self.bexp_builder.false_ptr()
     }
 
-    pub fn mk_one(&mut self) -> BExp {
-        self.bexp_hcons.mk(BExp_::One)
+    pub fn mk_one(&mut self) -> Ptr {
+        self.bexp_builder.true_ptr()
     }
 
-    pub fn mk_pbool(&mut self, s: String) -> BExp {
+    pub fn mk_pbool(&mut self, s: String) -> Ptr {
         let x = self.mk_name(s);
-        self.bexp_hcons.mk(BExp_::PBool(x))
+        self.bexp_builder.var(x, true)
     }
 
-    pub fn mk_or(&mut self, b1: BExp, b2: BExp) -> BExp {
-        let one = self.mk_one();
-        let zero = self.mk_zero();
-        if b1 == one.clone() {
-            one
-        } else if b2 == one.clone() {
-            one
-        } else if b1 == zero {
+    pub fn mk_or(&mut self, b1: Ptr, b2: Ptr) -> Ptr {
+        if b1.is_true() {
+            self.mk_one()
+        } else if b2.is_true() {
+            self.mk_one()
+        } else if b1.is_false() {
             b2
-        } else if b2 == zero {
+        } else if b2.is_false() {
             b1
         } else if b1 == b2 {
             b1
         } else {
-            self.bexp_hcons.mk(BExp_::Or(b1, b2))
+            self.bexp_builder.or(b1, b2)
         }
     }
 
-    pub fn mk_and(&mut self, b1: BExp, b2: BExp) -> BExp {
-        let one = self.mk_one();
-        let zero = self.mk_zero();
-        if b1 == one {
+    pub fn mk_and(&mut self, b1: Ptr, b2: Ptr) -> Ptr {
+        if b1.is_true() {
             b2
-        } else if b2 == one {
+        } else if b2.is_true() {
             b1
-        } else if b1 == zero {
-            zero
-        } else if b2 == zero {
-            zero
+        } else if b1.is_false() {
+            self.mk_zero()
+        } else if b2.is_false() {
+            self.mk_zero()
         } else if b1 == b2 {
             b1
         } else {
-            self.bexp_hcons.mk(BExp_::And(b1, b2))
+            self.bexp_builder.and(b1, b2)
         }
     }
 
-    pub fn mk_not(&mut self, b1: BExp) -> BExp {
-        let one = self.mk_one();
-        let zero = self.mk_zero();
-        if b1 == one {
-            zero
-        } else if b1 == zero {
-            one
+    pub fn mk_not(&mut self, b1: Ptr) -> Ptr {
+        if b1.is_true() {
+            self.mk_zero()
+        } else if b1.is_false() {
+            self.mk_one()
         } else {
-            self.bexp_hcons.mk(BExp_::Not(b1))
+            self.bexp_builder.negate(b1)
         }
     }
 
-    pub fn from_bexp(&mut self, raw: parsing::BExp) -> BExp {
+    pub fn from_bexp(&mut self, raw: parsing::BExp) -> Ptr {
         use parsing::BExp::*;
         match raw {
             Zero => self.mk_zero(),
@@ -143,47 +94,5 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
                 self.mk_not(b)
             }
         }
-    }
-
-    pub fn to_ptr(&mut self, bexp: &BExp) -> Ptr {
-        use BExp_::*;
-        match self.bexp_cache.get(bexp) {
-            Some(b) => *b,
-            None => {
-                let b = match bexp.get() {
-                    One => self.bexp_builder.true_ptr(),
-                    Zero => self.bexp_builder.false_ptr(),
-                    PBool(n) => self.bexp_builder.var(VarLabel::new(n.id), true),
-                    Or(b1, b2) => {
-                        let b1 = self.to_ptr(b1);
-                        let b2 = self.to_ptr(b2);
-                        self.bexp_builder.or(b1, b2)
-                    }
-                    And(b1, b2) => {
-                        let b1 = self.to_ptr(b1);
-                        let b2 = self.to_ptr(b2);
-                        self.bexp_builder.and(b1, b2)
-                    }
-                    Not(b) => {
-                        let b = self.to_ptr(b);
-                        self.bexp_builder.negate(b)
-                    }
-                };
-                self.bexp_cache.insert(bexp.clone(), b);
-                b
-            }
-        }
-    }
-
-    pub fn is_false(&mut self, bexp: &BExp) -> bool {
-        let b = self.to_ptr(bexp);
-        self.bexp_cache.insert(bexp.clone(), b);
-        b.is_false()
-    }
-
-    pub fn is_equiv(&mut self, bexp1: &BExp, bexp2: &BExp) -> bool {
-        let b1 = self.to_ptr(bexp1);
-        let b2 = self.to_ptr(bexp2);
-        b1 == b2
     }
 }

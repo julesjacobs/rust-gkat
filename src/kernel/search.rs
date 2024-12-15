@@ -9,7 +9,7 @@ pub enum VisitResult {
 }
 
 impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
-    pub fn reject(&mut self, exp: &Exp) -> BExp {
+    pub fn reject(&mut self, exp: &Exp<Ptr>) -> Ptr {
         let dexp = self.derivative(exp);
         let eps = self.epsilon(exp);
         let zero = self.mk_zero();
@@ -21,7 +21,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         self.mk_and(not_epsilon, not_transitions)
     }
 
-    fn visit_descendants(&mut self, exps: Vec<Exp>) -> VisitResult {
+    fn visit_descendants(&mut self, exps: Vec<Exp<Ptr>>) -> VisitResult {
         use VisitResult::*;
         let mut result = Unknown;
         for e in exps {
@@ -39,7 +39,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         result
     }
 
-    pub fn visit(&mut self, exp: &Exp) -> VisitResult {
+    pub fn visit(&mut self, exp: &Exp<Ptr>) -> VisitResult {
         use VisitResult::*;
         if self.dead_states.contains(exp) {
             Dead
@@ -48,11 +48,11 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         } else {
             self.explored.insert(exp.clone());
             let eps = self.epsilon(exp);
-            if self.is_false(&eps) {
+            if eps.is_false() {
                 let dexp = self.derivative(exp);
-                let next_exps: Vec<Exp> = dexp
+                let next_exps: Vec<Exp<Ptr>> = dexp
                     .into_iter()
-                    .filter_map(|(b, (e, _))| if self.is_false(&b) { None } else { Some(e) })
+                    .filter_map(|(b, (e, _))| if b.is_false() { None } else { Some(e) })
                     .collect();
                 self.visit_descendants(next_exps)
             } else {
@@ -61,7 +61,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         }
     }
 
-    pub fn is_dead(&mut self, exp: &Exp) -> bool {
+    pub fn is_dead(&mut self, exp: &Exp<Ptr>) -> bool {
         use VisitResult::*;
         match self.visit(exp) {
             Unknown => {

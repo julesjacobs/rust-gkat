@@ -3,21 +3,19 @@ use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
 use hashconsing::HConsign;
 use rsdd::builder::BottomUpBuilder;
-use rsdd::repr::DDNNFPtr;
+use rsdd::repr::{DDNNFPtr, VarLabel};
 
 pub struct GkatManager<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> {
     // bexp states
     pub(super) name_stamp: u64,
-    pub(super) name_map: HashMap<String, u64>,
-    pub(super) bexp_hcons: HConsign<BExp_>,
+    pub(super) name_map: HashMap<String, VarLabel>,
     pub(super) bexp_builder: &'a Builder,
-    pub(super) bexp_cache: HashMap<BExp, Ptr>,
     // exp states
-    pub(super) exp_hcons: HConsign<Exp_>,
+    pub(super) exp_hcons: HConsign<Exp_<Ptr>>,
     // search states
-    pub(super) dead_states: HashSet<Exp>,
-    pub(super) explored: HashSet<Exp>,
-    pub(super) uf_table: HashMap<Exp, UnionFindNode<()>>,
+    pub(super) dead_states: HashSet<Exp<Ptr>>,
+    pub(super) explored: HashSet<Exp<Ptr>>,
+    pub(super) uf_table: HashMap<Exp<Ptr>, UnionFindNode<()>>,
 }
 
 impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
@@ -26,9 +24,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
             // bexp init
             name_stamp: 0,
             name_map: HashMap::default(),
-            bexp_hcons: HConsign::empty(),
             bexp_builder: builder,
-            bexp_cache: HashMap::default(),
             // exp init
             exp_hcons: HConsign::empty(),
             // search init

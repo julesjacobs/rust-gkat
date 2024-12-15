@@ -2,7 +2,7 @@ use super::*;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
 impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
-    pub fn epsilon(&mut self, m: &Exp) -> BExp {
+    pub fn epsilon(&mut self, m: &Exp<Ptr>) -> Ptr {
         use Exp_::*;
         match m.get() {
             Act(_) => self.mk_zero(),
@@ -26,9 +26,9 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
 
     fn combine_bexp_with(
         &mut self,
-        be: BExp,
-        m: Vec<(BExp, (Exp, Action))>,
-    ) -> Vec<(BExp, (Exp, Action))> {
+        be: Ptr,
+        m: Vec<(Ptr, (Exp<Ptr>, Action))>,
+    ) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
         m.into_iter()
             .map(|(a, b)| {
                 let a = self.mk_and(be.clone(), a);
@@ -39,10 +39,10 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
 
     fn while_helper(
         &mut self,
-        be: &BExp,
-        exp: &Exp,
-        m: Vec<(BExp, (Exp, Action))>,
-    ) -> Vec<(BExp, (Exp, Action))> {
+        be: &Ptr,
+        exp: &Exp<Ptr>,
+        m: Vec<(Ptr, (Exp<Ptr>, Action))>,
+    ) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
         m.into_iter()
             .map(|(a, (e, p))| {
                 let while_exp = self.mk_while(be.clone(), exp.clone());
@@ -55,9 +55,9 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
 
     fn seq_helper_no_epsilon(
         &mut self,
-        exp: &Exp,
-        m: Vec<(BExp, (Exp, Action))>,
-    ) -> Vec<(BExp, (Exp, Action))> {
+        exp: &Exp<Ptr>,
+        m: Vec<(Ptr, (Exp<Ptr>, Action))>,
+    ) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
         m.into_iter()
             .map(|(b, (e, p))| {
                 let seq_exp = self.mk_seq(e, exp.clone());
@@ -68,9 +68,9 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
 
     fn seq_helper_epsilon(
         &mut self,
-        eps: &BExp,
-        m: Vec<(BExp, (Exp, Action))>,
-    ) -> Vec<(BExp, (Exp, Action))> {
+        eps: &Ptr,
+        m: Vec<(Ptr, (Exp<Ptr>, Action))>,
+    ) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
         m.into_iter()
             .map(|(b, pair)| {
                 let b = self.mk_and(b, eps.clone());
@@ -79,7 +79,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
             .collect()
     }
 
-    pub fn derivative(&mut self, exp: &Exp) -> Vec<(BExp, (Exp, Action))> {
+    pub fn derivative(&mut self, exp: &Exp<Ptr>) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
         use Exp_::*;
         match exp.get() {
             Test(_) => vec![],

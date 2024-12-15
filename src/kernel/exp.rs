@@ -33,15 +33,15 @@ impl Hash for Action {
     }
 }
 
-pub type Exp = HConsed<Exp_>;
+pub type Exp<BExp> = HConsed<Exp_<BExp>>;
 
 #[derive(Debug, Hash, Clone, PartialEq, Eq)]
-pub enum Exp_ {
+pub enum Exp_<BExp> {
     Act(Action),
-    Seq(Exp, Exp),
-    If(BExp, Exp, Exp),
+    Seq(Exp<BExp>, Exp<BExp>),
+    If(BExp, Exp<BExp>, Exp<BExp>),
     Test(BExp),
-    While(BExp, Exp),
+    While(BExp, Exp<BExp>),
 }
 
 impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
@@ -52,32 +52,32 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         Action { name: s, id: id }
     }
 
-    pub fn mk_act(&mut self, s: String) -> Exp {
+    pub fn mk_act(&mut self, s: String) -> Exp<Ptr> {
         let x = self.mk_action(s);
         self.exp_hcons.mk(Exp_::Act(x))
     }
 
-    pub fn mk_skip(&mut self) -> Exp {
-        let b = self.mk_one();
+    pub fn mk_skip(&mut self) -> Exp<Ptr> {
+        let b = self.bexp_builder.true_ptr();
         self.mk_test(b)
     }
 
-    pub fn mk_fail(&mut self) -> Exp {
-        let b = self.mk_zero();
+    pub fn mk_fail(&mut self) -> Exp<Ptr> {
+        let b = self.bexp_builder.false_ptr();
         self.mk_test(b)
     }
 
-    pub fn mk_test(&mut self, b: BExp) -> Exp {
+    pub fn mk_test(&mut self, b: Ptr) -> Exp<Ptr> {
         self.exp_hcons.mk(Exp_::Test(b))
     }
 
-    pub fn mk_seq(&mut self, p1: Exp, p2: Exp) -> Exp {
+    pub fn mk_seq(&mut self, p1: Exp<Ptr>, p2: Exp<Ptr>) -> Exp<Ptr> {
         use Exp_::*;
         match (p1.get(), p2.get()) {
             (Test(b1), Test(b2)) => {
                 let b1 = b1.clone();
                 let b2 = b2.clone();
-                let b3 = self.mk_and(b1, b2);
+                let b3 = self.bexp_builder.and(b1, b2);
                 self.mk_test(b3)
             }
             _ => {
@@ -96,13 +96,13 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         }
     }
 
-    pub fn mk_if(&mut self, b: BExp, p1: Exp, p2: Exp) -> Exp {
-        if b == self.mk_one() {
+    pub fn mk_if(&mut self, b: Ptr, p1: Exp<Ptr>, p2: Exp<Ptr>) -> Exp<Ptr> {
+        if b.is_true() {
             p1
-        } else if b == self.mk_zero() {
+        } else if b.is_false() {
             p2
         } else if p1 == self.mk_fail() {
-            let nb = self.mk_not(b);
+            let nb = self.bexp_builder.negate(b);
             let p1 = self.mk_test(nb);
             self.mk_seq(p1, p2)
         } else if p2 == self.mk_fail() {
@@ -113,11 +113,11 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         }
     }
 
-    pub fn mk_while(&mut self, b: BExp, p: Exp) -> Exp {
+    pub fn mk_while(&mut self, b: Ptr, p: Exp<Ptr>) -> Exp<Ptr> {
         self.exp_hcons.mk(Exp_::While(b, p))
     }
 
-    pub fn from_exp(&mut self, raw: parsing::Exp) -> Exp {
+    pub fn from_exp(&mut self, raw: parsing::Exp) -> Exp<Ptr> {
         use parsing::Exp::*;
         match raw {
             Act(s) => self.mk_act(s),
@@ -144,7 +144,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         }
     }
 
-    pub fn mk_uf(&mut self, exp: &Exp) -> UnionFindNode<()> {
+    pub fn get_uf(&mut self, exp: &Exp<Ptr>) -> UnionFindNode<()> {
         match self.uf_table.get(exp) {
             Some(node) => node.clone(),
             None => {
