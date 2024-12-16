@@ -1,7 +1,6 @@
 use super::*;
 use crate::parsing;
 use ahash::AHasher;
-use disjoint_sets::UnionFindNode;
 use hashconsing::{HConsed, HashConsign};
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 use std::{
@@ -140,17 +139,6 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
                 let b = self.from_bexp(b);
                 let p = self.from_exp(*p);
                 self.mk_while(b, p)
-            }
-        }
-    }
-
-    pub fn get_uf(&mut self, exp: &Exp<Ptr>) -> UnionFindNode<()> {
-        match self.uf_table.get(exp) {
-            Some(node) => node.clone(),
-            None => {
-                let node = UnionFindNode::new(());
-                self.uf_table.insert(exp.clone(), node.clone());
-                node
             }
         }
     }

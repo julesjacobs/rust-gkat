@@ -1,4 +1,5 @@
 use super::*;
+use crate::gkat::*;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
 #[derive(Debug, Clone, Copy)]
@@ -8,17 +9,17 @@ pub enum VisitResult {
     Unknown,
 }
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<'a, Ptr, Builder> {
     pub fn reject(&mut self, exp: &Exp<Ptr>) -> Ptr {
         let dexp = self.derivative(exp);
         let eps = self.epsilon(exp);
-        let zero = self.mk_zero();
+        let zero = self.gkat.mk_zero();
         let transitions = dexp
             .into_iter()
-            .fold(zero, |acc, (b, _, _)| self.mk_or(acc, b));
-        let not_epsilon = self.mk_not(eps);
-        let not_transitions = self.mk_not(transitions);
-        self.mk_and(not_epsilon, not_transitions)
+            .fold(zero, |acc, (b, _, _)| self.gkat.mk_or(acc, b));
+        let not_epsilon = self.gkat.mk_not(eps);
+        let not_transitions = self.gkat.mk_not(transitions);
+        self.gkat.mk_and(not_epsilon, not_transitions)
     }
 
     fn visit_descendants(&mut self, exps: Vec<Exp<Ptr>>) -> VisitResult {

@@ -1,7 +1,8 @@
 use super::*;
+use crate::gkat::*;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<'a, Ptr, Builder> {
     pub fn equiv_iter(&mut self, exp1: &Exp<Ptr>, exp2: &Exp<Ptr>) -> bool {
         let mut queue = Vec::new();
         queue.push((exp1.clone(), exp2.clone()));
@@ -27,14 +28,14 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
                     return false;
                 }
                 let assert1 = dexp2.iter().all(|(b0, exp, _)| {
-                    let b1 = self.mk_and(reject1.clone(), b0.clone());
+                    let b1 = self.gkat.mk_and(reject1.clone(), b0.clone());
                     b1.is_false() || self.is_dead(&exp)
                 });
                 if !assert1 {
                     return false;
                 }
                 let assert2 = dexp1.iter().all(|(b0, exp, _)| {
-                    let b1 = self.mk_and(reject2.clone(), b0.clone());
+                    let b1 = self.gkat.mk_and(reject2.clone(), b0.clone());
                     b1.is_false() || self.is_dead(&exp)
                 });
                 if !assert2 {
@@ -43,7 +44,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
                 let mut assert3;
                 for (be1, next_exp1, p) in dexp1 {
                     for (be2, next_exp2, q) in &dexp2 {
-                        let b1b2 = self.mk_and(be1.clone(), be2.clone());
+                        let b1b2 = self.gkat.mk_and(be1.clone(), be2.clone());
                         if b1b2.is_false() {
                             continue;
                         } else if p == *q {

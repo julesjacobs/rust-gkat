@@ -1,8 +1,10 @@
-mod kernel;
+mod gkat;
+mod kernel1;
 mod parsing;
 
 use clap::{Parser, ValueEnum};
-use kernel::*;
+use gkat::*;
+use kernel1::*;
 use parsing::*;
 use rsdd::{
     builder::{self, cache::AllIteTable},
@@ -34,7 +36,8 @@ fn main() {
             let mut gkat = GkatManager::new(&builder);
             let exp1 = gkat.from_exp(exp1);
             let exp2 = gkat.from_exp(exp2);
-            gkat.equiv_iter(&exp1, &exp2)
+            let mut solver = Solver::new(gkat);
+            solver.equiv_iter(&exp1, &exp2)
         }
         Mode::Sdd => {
             let order: Vec<VarLabel> = (0..1024).map(|x| VarLabel::new(x as u64)).collect();
@@ -43,7 +46,8 @@ fn main() {
             let mut gkat = GkatManager::new(&builder);
             let exp1 = gkat.from_exp(exp1);
             let exp2 = gkat.from_exp(exp2);
-            gkat.equiv_iter(&exp1, &exp2)
+            let mut solver = Solver::new(gkat);
+            solver.equiv_iter(&exp1, &exp2)
         }
     };
     println!("equiv_expected = {}", b);
