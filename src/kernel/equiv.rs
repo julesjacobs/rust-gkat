@@ -25,14 +25,14 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
             if !(eps1 == eps2) {
                 return false;
             }
-            let assert1 = dexp2.iter().all(|(b0, (exp, _))| {
+            let assert1 = dexp2.iter().all(|(b0, exp, _)| {
                 let b1 = self.mk_and(reject1.clone(), b0.clone());
                 b1.is_false() || self.is_dead(&exp)
             });
             if !assert1 {
                 return false;
             }
-            let assert2 = dexp1.iter().all(|(b0, (exp, _))| {
+            let assert2 = dexp1.iter().all(|(b0, exp, _)| {
                 let b1 = self.mk_and(reject2.clone(), b0.clone());
                 b1.is_false() || self.is_dead(&exp)
             });
@@ -40,8 +40,8 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
                 return false;
             }
             let mut assert3;
-            for (be1, (next_exp1, p)) in dexp1 {
-                for (be2, (next_exp2, q)) in &dexp2 {
+            for (be1, next_exp1, p) in dexp1 {
+                for (be2, next_exp2, q) in &dexp2 {
                     let b1b2 = self.mk_and(be1.clone(), be2.clone());
                     if b1b2.is_false() {
                         continue;

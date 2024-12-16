@@ -20,7 +20,7 @@ pub struct GkatManager<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>>
     pub(super) explored: HashSet<Exp<Ptr>>,
     pub(super) uf_table: HashMap<Exp<Ptr>, UnionFindNode<()>>,
     // caching
-    pub(super) deriv_cache: LruCache<Exp<Ptr>, Vec<(Ptr, (Exp<Ptr>, Action))>>,
+    pub(super) deriv_cache: LruCache<Exp<Ptr>, Vec<(Ptr, Exp<Ptr>, Action)>>,
 }
 
 impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {

@@ -15,7 +15,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         let zero = self.mk_zero();
         let transitions = dexp
             .into_iter()
-            .fold(zero, |acc, (b, _)| self.mk_or(acc, b));
+            .fold(zero, |acc, (b, _, _)| self.mk_or(acc, b));
         let not_epsilon = self.mk_not(eps);
         let not_transitions = self.mk_not(transitions);
         self.mk_and(not_epsilon, not_transitions)
@@ -52,7 +52,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
                 let dexp = self.derivative(exp);
                 let next_exps: Vec<Exp<Ptr>> = dexp
                     .into_iter()
-                    .filter_map(|(b, (e, _))| if b.is_false() { None } else { Some(e) })
+                    .filter_map(|(b, e, _)| if b.is_false() { None } else { Some(e) })
                     .collect();
                 self.visit_descendants(next_exps)
             } else {

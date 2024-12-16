@@ -24,62 +24,31 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
         }
     }
 
-    fn combine_bexp_with(
-        &mut self,
-        be: Ptr,
-        m: Vec<(Ptr, (Exp<Ptr>, Action))>,
-    ) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
-        m.into_iter()
-            .map(|(a, b)| {
-                let a = self.mk_and(be.clone(), a);
-                (a, b)
-            })
-            .collect()
+    fn combine_bexp_with(&mut self, be: Ptr, m: &mut Vec<(Ptr, Exp<Ptr>, Action)>) {
+        for elem in m.iter_mut() {
+            let a = self.mk_and(be.clone(), elem.0);
+            (*elem).0 = a;
+        }
     }
 
-    fn while_helper(
-        &mut self,
-        be: &Ptr,
-        exp: &Exp<Ptr>,
-        m: Vec<(Ptr, (Exp<Ptr>, Action))>,
-    ) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
-        m.into_iter()
-            .map(|(a, (e, p))| {
-                let while_exp = self.mk_while(be.clone(), exp.clone());
-                let seq_exp = self.mk_seq(e, while_exp);
-                let b = self.mk_and(a, be.clone());
-                (b, (seq_exp, p))
-            })
-            .collect()
+    fn combine_exp_with(&mut self, exp: &Exp<Ptr>, m: &mut Vec<(Ptr, Exp<Ptr>, Action)>) {
+        for elem in m.iter_mut() {
+            let seq_exp = self.mk_seq(elem.1.clone(), exp.clone());
+            (*elem).1 = seq_exp;
+        }
     }
 
-    fn seq_helper_no_epsilon(
-        &mut self,
-        exp: &Exp<Ptr>,
-        m: Vec<(Ptr, (Exp<Ptr>, Action))>,
-    ) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
-        m.into_iter()
-            .map(|(b, (e, p))| {
-                let seq_exp = self.mk_seq(e, exp.clone());
-                (b, (seq_exp, p))
-            })
-            .collect()
+    fn while_helper(&mut self, be: &Ptr, exp: &Exp<Ptr>, m: &mut Vec<(Ptr, Exp<Ptr>, Action)>) {
+        let while_exp = self.mk_while(be.clone(), exp.clone());
+        for elem in m.iter_mut() {
+            let seq_exp = self.mk_seq(elem.1.clone(), while_exp.clone());
+            let b = self.mk_and(elem.0, be.clone());
+            (*elem).0 = b;
+            (*elem).1 = seq_exp;
+        }
     }
 
-    fn seq_helper_epsilon(
-        &mut self,
-        eps: &Ptr,
-        m: Vec<(Ptr, (Exp<Ptr>, Action))>,
-    ) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
-        m.into_iter()
-            .map(|(b, pair)| {
-                let b = self.mk_and(b, eps.clone());
-                (b, pair)
-            })
-            .collect()
-    }
-
-    pub fn derivative(&mut self, exp: &Exp<Ptr>) -> Vec<(Ptr, (Exp<Ptr>, Action))> {
+    pub fn derivative(&mut self, exp: &Exp<Ptr>) -> Vec<(Ptr, Exp<Ptr>, Action)> {
         if let Some(deriv) = self.deriv_cache.get(exp) {
             return deriv.clone();
         }
@@ -89,29 +58,30 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, P
             Act(n) => {
                 let one_exp = self.mk_one();
                 let e = self.mk_test(one_exp.clone());
-                vec![(one_exp, (e, n.clone()))]
+                vec![(one_exp, e, n.clone())]
             }
             If(be, p1, p2) => {
-                let dexp1 = self.derivative(p1);
-                let dexp2 = self.derivative(p2);
+                let mut dexp1 = self.derivative(p1);
+                let mut dexp2 = self.derivative(p2);
                 let not_be = self.mk_not(be.clone());
-                let mut combine1 = self.combine_bexp_with(be.clone(), dexp1);
-                let mut combine2 = self.combine_bexp_with(not_be, dexp2);
-                combine1.append(&mut combine2);
-                combine1
+                self.combine_bexp_with(be.clone(), &mut dexp1);
+                self.combine_bexp_with(not_be, &mut dexp2);
+                dexp1.append(&mut dexp2);
+                dexp1
             }
             Seq(p1, p2) => {
                 let eps = self.epsilon(p1);
-                let dexp1 = self.derivative(p1);
-                let dexp2 = self.derivative(p2);
-                let mut seq1 = self.seq_helper_no_epsilon(p2, dexp1);
-                let mut seq2 = self.seq_helper_epsilon(&eps, dexp2);
-                seq1.append(&mut seq2);
-                seq1
+                let mut dexp1 = self.derivative(p1);
+                let mut dexp2 = self.derivative(p2);
+                self.combine_exp_with(p2, &mut dexp1);
+                self.combine_bexp_with(eps, &mut dexp2);
+                dexp1.append(&mut dexp2);
+                dexp1
             }
             While(be, p) => {
-                let dexp = self.derivative(p);
-                self.while_helper(be, p, dexp)
+                let mut dexp = self.derivative(p);
+                self.while_helper(be, p, &mut dexp);
+                dexp
             }
         };
         self.deriv_cache.put(exp.clone(), deriv.clone());
