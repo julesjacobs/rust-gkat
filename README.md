@@ -62,17 +62,17 @@ Currently, we have tested `rust-gkat` on all large GKAT pairs contained in
 all examples in the dataset.
 
 Even for difficult examples such as `exp9000.txt`, we achieve a very competitive
-runtime of `0.07s` and peak memory consumption of only `20MB`.
+runtime of `0.05s` and peak memory consumption of `18MB`.
 ```
 ➞  /usr/bin/time -l target/release/rust-gkat -m bdd ./dataset/exp9000.txt
 equiv_expected = true
 equiv_result   = true
-        0.07 real         0.06 user         0.00 sys
-            19398656  maximum resident set size
+        0.05 real         0.05 user         0.00 sys
+            18792448  maximum resident set size
                    0  average shared memory size
                    0  average unshared data size
                    0  average unshared stack size
-                1315  page reclaims
+                1286  page reclaims
                    3  page faults
                    0  swaps
                    0  block input operations
@@ -81,8 +81,8 @@ equiv_result   = true
                    0  messages received
                    0  signals received
                    0  voluntary context switches
-                  17  involuntary context switches
-          1314991152  instructions retired
-           234181996  cycles elapsed
-            18268424  peak memory footprint
+                   5  involuntary context switches
+           832197138  instructions retired
+           165610125  cycles elapsed
+            16630144  peak memory footprint
 ```
