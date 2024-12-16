@@ -43,7 +43,7 @@ pub enum Exp_<BExp> {
     While(BExp, Exp<BExp>),
 }
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Builder> {
     fn mk_action(&mut self, s: String) -> Action {
         let mut hasher = AHasher::default();
         s.hash(&mut hasher);

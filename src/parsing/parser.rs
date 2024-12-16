@@ -1,4 +1,4 @@
-use crate::parsing::ast::Exp;
+use crate::parsing::raw::Exp;
 
 use lalrpop_util::lalrpop_mod;
 

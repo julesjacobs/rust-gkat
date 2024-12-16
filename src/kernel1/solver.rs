@@ -1,4 +1,4 @@
-use crate::gkat::*;
+use crate::syntax::*;
 use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
 use lru::LruCache;
@@ -8,7 +8,7 @@ use std::num::NonZero;
 
 pub struct Solver<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> {
     // gkat
-    pub(super) gkat: GkatManager<'a, Ptr, Builder>,
+    pub(super) gkat: Gkat<'a, Ptr, Builder>,
     // search states
     pub(super) dead_states: HashSet<Exp<Ptr>>,
     pub(super) explored: HashSet<Exp<Ptr>>,
@@ -18,7 +18,7 @@ pub struct Solver<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> {
 }
 
 impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<'a, Ptr, Builder> {
-    pub fn new(gkat: GkatManager<'a, Ptr, Builder>) -> Self {
+    pub fn new(gkat: Gkat<'a, Ptr, Builder>) -> Self {
         Solver {
             // gkat
             gkat: gkat,

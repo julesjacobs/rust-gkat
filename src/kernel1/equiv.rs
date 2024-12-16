@@ -1,5 +1,5 @@
 use super::*;
-use crate::gkat::*;
+use crate::syntax::*;
 use recursive::recursive;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 

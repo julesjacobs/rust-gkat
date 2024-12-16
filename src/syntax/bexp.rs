@@ -5,7 +5,7 @@ use rsdd::{
     repr::{DDNNFPtr, VarLabel},
 };
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> GkatManager<'a, Ptr, Builder> {
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Builder> {
     fn mk_name(&mut self, s: String) -> VarLabel {
         match self.name_map.get(&s) {
             Some(x) => x.clone(),

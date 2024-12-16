@@ -1,6 +1,6 @@
 mod bexp;
 mod exp;
-mod manager;
+mod gkat;
 
 pub use exp::*;
-pub use manager::*;
+pub use gkat::*;

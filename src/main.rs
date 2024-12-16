@@ -1,9 +1,8 @@
-mod gkat;
 mod kernel1;
 mod parsing;
+mod syntax;
 
 use clap::{Parser, ValueEnum};
-use gkat::*;
 use kernel1::*;
 use parsing::*;
 use rsdd::{
@@ -11,6 +10,7 @@ use rsdd::{
     repr::{BddPtr, VTree, VarLabel},
 };
 use std::fs;
+use syntax::*;
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Mode {
@@ -33,7 +33,7 @@ fn main() {
         Mode::Bdd => {
             let builder =
                 builder::bdd::RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
-            let mut gkat = GkatManager::new(&builder);
+            let mut gkat = Gkat::new(&builder);
             let exp1 = gkat.from_exp(exp1);
             let exp2 = gkat.from_exp(exp2);
             let mut solver = Solver::new(gkat);
@@ -43,7 +43,7 @@ fn main() {
             let order: Vec<VarLabel> = (0..1024).map(|x| VarLabel::new(x as u64)).collect();
             let vtree = VTree::right_linear(&order);
             let builder = builder::sdd::CompressionSddBuilder::new(vtree);
-            let mut gkat = GkatManager::new(&builder);
+            let mut gkat = Gkat::new(&builder);
             let exp1 = gkat.from_exp(exp1);
             let exp2 = gkat.from_exp(exp2);
             let mut solver = Solver::new(gkat);
