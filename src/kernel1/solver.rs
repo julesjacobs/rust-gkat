@@ -2,32 +2,30 @@ use crate::syntax::*;
 use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
 use lru::LruCache;
-use rsdd::builder::BottomUpBuilder;
-use rsdd::repr::DDNNFPtr;
-use std::num::NonZero;
+use std::{hash::Hash, marker::PhantomData, num::NonZero};
 
-pub struct Solver<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> {
-    // gkat
-    pub(super) gkat: Gkat<'a, Ptr, Builder>,
+pub struct Solver<Ptr, Builder> {
     // search states
     pub(super) dead_states: HashSet<Exp<Ptr>>,
     pub(super) explored: HashSet<Exp<Ptr>>,
     pub(super) uf_table: HashMap<Exp<Ptr>, UnionFindNode<()>>,
     // caching
     pub(super) deriv_cache: LruCache<Exp<Ptr>, Vec<(Ptr, Exp<Ptr>, Action)>>,
+    // builder
+    builder: PhantomData<Builder>,
 }
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<'a, Ptr, Builder> {
-    pub fn new(gkat: Gkat<'a, Ptr, Builder>) -> Self {
+impl<Ptr: Hash, Builder> Solver<Ptr, Builder> {
+    pub fn new() -> Self {
         Solver {
-            // gkat
-            gkat: gkat,
             // search init
             dead_states: HashSet::default(),
             explored: HashSet::default(),
             uf_table: HashMap::default(),
             // caching
             deriv_cache: LruCache::new(NonZero::new(1024).unwrap()),
+            // builder
+            builder: PhantomData,
         }
     }
 

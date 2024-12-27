@@ -9,24 +9,28 @@ pub enum VisitResult {
     Unknown,
 }
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<'a, Ptr, Builder> {
-    pub fn reject(&mut self, exp: &Exp<Ptr>) -> Ptr {
-        let dexp = self.derivative(exp);
-        let eps = self.epsilon(exp);
-        let zero = self.gkat.mk_zero();
+impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Builder> {
+    pub fn reject(&mut self, gkat: &mut Gkat<'a, Ptr, Builder>, exp: &Exp<Ptr>) -> Ptr {
+        let dexp = self.derivative(gkat, exp);
+        let eps = self.epsilon(gkat, exp);
+        let zero = gkat.mk_zero();
         let transitions = dexp
             .into_iter()
-            .fold(zero, |acc, (b, _, _)| self.gkat.mk_or(acc, b));
-        let not_epsilon = self.gkat.mk_not(eps);
-        let not_transitions = self.gkat.mk_not(transitions);
-        self.gkat.mk_and(not_epsilon, not_transitions)
+            .fold(zero, |acc, (b, _, _)| gkat.mk_or(acc, b));
+        let not_epsilon = gkat.mk_not(eps);
+        let not_transitions = gkat.mk_not(transitions);
+        gkat.mk_and(not_epsilon, not_transitions)
     }
 
-    fn visit_descendants(&mut self, exps: Vec<Exp<Ptr>>) -> VisitResult {
+    fn visit_descendants(
+        &mut self,
+        gkat: &mut Gkat<'a, Ptr, Builder>,
+        exps: Vec<Exp<Ptr>>,
+    ) -> VisitResult {
         use VisitResult::*;
         let mut result = Unknown;
         for e in exps {
-            match self.visit(&e) {
+            match self.visit(gkat, &e) {
                 Live => {
                     result = Live;
                     break;
@@ -40,7 +44,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<'a, Ptr, B
         result
     }
 
-    pub fn visit(&mut self, exp: &Exp<Ptr>) -> VisitResult {
+    pub fn visit(&mut self, gkat: &mut Gkat<'a, Ptr, Builder>, exp: &Exp<Ptr>) -> VisitResult {
         use VisitResult::*;
         if self.dead_states.contains(exp) {
             Dead
@@ -48,23 +52,23 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<'a, Ptr, B
             Unknown
         } else {
             self.explored.insert(exp.clone());
-            let eps = self.epsilon(exp);
+            let eps = self.epsilon(gkat, exp);
             if eps.is_false() {
-                let dexp = self.derivative(exp);
+                let dexp = self.derivative(gkat, exp);
                 let next_exps: Vec<Exp<Ptr>> = dexp
                     .into_iter()
                     .filter_map(|(b, e, _)| if b.is_false() { None } else { Some(e) })
                     .collect();
-                self.visit_descendants(next_exps)
+                self.visit_descendants(gkat, next_exps)
             } else {
                 Live
             }
         }
     }
 
-    pub fn is_dead(&mut self, exp: &Exp<Ptr>) -> bool {
+    pub fn is_dead(&mut self, gkat: &mut Gkat<'a, Ptr, Builder>, exp: &Exp<Ptr>) -> bool {
         use VisitResult::*;
-        match self.visit(exp) {
+        match self.visit(gkat, exp) {
             Unknown => {
                 for x in self.explored.iter() {
                     self.dead_states.insert(x.clone());
