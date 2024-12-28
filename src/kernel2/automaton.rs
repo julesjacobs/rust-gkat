@@ -16,9 +16,8 @@ struct RawAutomaton<BExp> {
     delta_hat: HashMap<u64, Vec<(BExp, u64, u64)>>,
 }
 
+#[derive(Debug)]
 pub struct Automaton<BExp> {
-    // start state
-    pub start: u64,
     // all states
     pub states: HashSet<u64>,
     // state behaviors
@@ -31,7 +30,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         &mut self,
         gkat: &mut Gkat<'a, BExp, Builder>,
         m: &Exp<BExp>,
-    ) -> Automaton<BExp> {
+    ) -> (u64, Automaton<BExp>) {
         let r = self.mk_raw(gkat, m);
         let st = self.mk_state();
         let mut states = r.states;
@@ -42,12 +41,12 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         states.insert(st);
         eps_hat.insert(st, eps_star);
         delta_hat.insert(st, delta_star);
-        Automaton {
-            start: st,
+        let automaton = Automaton {
             states: states,
             eps_hat: eps_hat,
             delta_hat: delta_hat,
-        }
+        };
+        (st, automaton)
     }
 
     #[recursive]

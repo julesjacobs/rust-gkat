@@ -13,13 +13,10 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
     pub fn reject(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, exp: &Exp<BExp>) -> BExp {
         let dexp = self.derivative(gkat, exp);
         let eps = self.epsilon(gkat, exp);
-        let zero = gkat.mk_zero();
-        let transitions = dexp
-            .into_iter()
-            .fold(zero, |acc, (b, _, _)| gkat.mk_or(acc, b));
-        let not_epsilon = gkat.mk_not(eps);
-        let not_transitions = gkat.mk_not(transitions);
-        gkat.mk_and(not_epsilon, not_transitions)
+        dexp.iter().fold(gkat.mk_not(eps), |acc, (b, _, _)| {
+            let nb = gkat.mk_not(*b);
+            gkat.mk_and(acc, nb)
+        })
     }
 
     fn visit_descendants(

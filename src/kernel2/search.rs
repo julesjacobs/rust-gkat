@@ -24,7 +24,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             .iter()
             .fold(gkat.mk_not(*eps), |acc, (b, _, _)| {
                 let nb = gkat.mk_not(*b);
-                gkat.mk_or(acc, nb)
+                gkat.mk_and(acc, nb)
             })
     }
 
