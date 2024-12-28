@@ -28,22 +28,22 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             })
     }
 
-    /*
     fn visit_descendants(
         &mut self,
         gkat: &mut Gkat<'a, BExp, Builder>,
-        exps: Vec<Exp<BExp>>,
+        sts: &Vec<u64>,
+        m: &Automaton<BExp>,
     ) -> VisitResult {
         use VisitResult::*;
         let mut result = Unknown;
-        for e in exps {
-            match self.visit(gkat, &e) {
+        for st in sts {
+            match self.visit(gkat, *st, m) {
                 Live => {
                     result = Live;
                     break;
                 }
                 Dead => {
-                    self.explored.insert(e);
+                    self.explored.insert(*st);
                 }
                 Unknown => {}
             }
@@ -51,32 +51,44 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         result
     }
 
-    pub fn visit(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, exp: &Exp<BExp>) -> VisitResult {
+    pub fn visit(
+        &mut self,
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        st: u64,
+        m: &Automaton<BExp>,
+    ) -> VisitResult {
         use VisitResult::*;
-        if self.dead_states.contains(exp) {
+        if self.dead_states.contains(&st) {
             Dead
-        } else if self.explored.contains(exp) {
+        } else if self.explored.contains(&st) {
             Unknown
         } else {
-            self.explored.insert(exp.clone());
-            let eps = self.epsilon(gkat, exp);
+            self.explored.insert(st);
+            let eps = m.eps_hat.get(&st).unwrap();
             if eps.is_false() {
-                let dexp = self.derivative(gkat, exp);
-                let next_exps: Vec<Exp<BExp>> = dexp
-                    .into_iter()
-                    .filter_map(|(b, e, _)| if b.is_false() { None } else { Some(e) })
+                let sts: Vec<_> = m
+                    .delta_hat
+                    .get(&st)
+                    .unwrap()
+                    .iter()
+                    .filter_map(|(b, st, _)| if b.is_false() { None } else { Some(*st) })
                     .collect();
-                self.visit_descendants(gkat, next_exps)
+                self.visit_descendants(gkat, &sts, m)
             } else {
                 Live
             }
         }
     }
 
-    pub fn is_dead(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, exp: &Exp<BExp>) -> bool {
+    pub fn is_dead(
+        &mut self,
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        st: u64,
+        m: &Automaton<BExp>,
+    ) -> bool {
         use VisitResult::*;
         self.explored.clear();
-        match self.visit(gkat, exp) {
+        match self.visit(gkat, st, m) {
             Unknown => {
                 let explored = &self.explored;
                 self.dead_states.extend(explored.iter().cloned());
@@ -86,5 +98,4 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             Dead => true,
         }
     }
-    */
 }
