@@ -37,6 +37,9 @@ fn main() {
             let mut gkat = Gkat::new(&builder);
             let exp1 = gkat.from_exp(exp1);
             let exp2 = gkat.from_exp(exp2);
+            let mut solver2 = kernel2::Solver::new();
+            let m = solver2.mk_automaton(&mut gkat, &exp1);
+            println!("starting {}", m.0);
             let mut solver = Solver::new();
             solver.equiv_iter(&mut gkat, &exp1, &exp2)
         }

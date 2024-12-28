@@ -1,4 +1,4 @@
-use std::{iter::FilterMap, marker::PhantomData, slice::Iter};
+use std::slice::Iter;
 
 use super::solver::Solver;
 use crate::syntax::*;
@@ -17,12 +17,12 @@ struct RawAutomaton<BExp> {
     delta_hat: HashMap<u64, Vec<(BExp, u64, u64)>>,
 }
 
-struct Automaton<BExp> {
+pub struct Automaton<BExp> {
     // all states
-    states: HashSet<u64>,
+    pub(super) states: HashSet<u64>,
     // state behaviors
-    eps_hat: HashMap<u64, BExp>,
-    delta_hat: HashMap<u64, Vec<(BExp, u64, u64)>>,
+    pub(super) eps_hat: HashMap<u64, BExp>,
+    pub(super) delta_hat: HashMap<u64, Vec<(BExp, u64, u64)>>,
 }
 
 struct GuardIterator<'a, 'b, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> {
@@ -70,10 +70,10 @@ impl<'a, 'b, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Iterator
 }
 
 impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
-    fn mk_automaton(
+    pub fn mk_automaton(
         &mut self,
         gkat: &mut Gkat<'a, BExp, Builder>,
-        m: Exp<BExp>,
+        m: &Exp<BExp>,
     ) -> (u64, Automaton<BExp>) {
         let r = self.mk_raw(gkat, m);
         let st = self.mk_state();
@@ -93,7 +93,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         (st, automaton)
     }
 
-    fn mk_raw(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, m: Exp<BExp>) -> RawAutomaton<BExp> {
+    fn mk_raw(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, m: &Exp<BExp>) -> RawAutomaton<BExp> {
         use Exp_::*;
         match m.get() {
             Act(a) => {
@@ -121,8 +121,8 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 }
             }
             Seq(p1, p2) => {
-                let r1 = self.mk_raw(gkat, p1.clone());
-                let r2 = self.mk_raw(gkat, p2.clone());
+                let r1 = self.mk_raw(gkat, p1);
+                let r2 = self.mk_raw(gkat, p2);
                 // states
                 let mut states = r1.states;
                 states.extend(r2.states);
@@ -156,8 +156,8 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 }
             }
             Ifte(b, p1, p2) => {
-                let r1 = self.mk_raw(gkat, p1.clone());
-                let r2 = self.mk_raw(gkat, p2.clone());
+                let r1 = self.mk_raw(gkat, p1);
+                let r2 = self.mk_raw(gkat, p2);
                 // states
                 let mut states = r1.states;
                 states.extend(r2.states);
@@ -194,7 +194,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 delta_hat: HashMap::new(),
             },
             While(b, p) => {
-                let r = self.mk_raw(gkat, p.clone());
+                let r = self.mk_raw(gkat, p);
                 // states
                 let states = r.states;
                 // eps_star
