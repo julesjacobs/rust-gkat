@@ -1,6 +1,5 @@
-use std::slice::Iter;
-
-use super::solver::Solver;
+use super::guard::*;
+use super::solver::*;
 use crate::syntax::*;
 use ahash::{HashMap, HashMapExt, HashSet};
 use recursive::recursive;
@@ -18,55 +17,13 @@ struct RawAutomaton<BExp> {
 }
 
 pub struct Automaton<BExp> {
+    // start state
+    pub start: u64,
     // all states
-    pub(super) states: HashSet<u64>,
+    pub states: HashSet<u64>,
     // state behaviors
-    pub(super) eps_hat: HashMap<u64, BExp>,
-    pub(super) delta_hat: HashMap<u64, Vec<(BExp, u64, u64)>>,
-}
-
-struct GuardIterator<'a, 'b, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> {
-    gkat: &'b mut Gkat<'a, BExp, Builder>,
-    guard: BExp,
-    iter: Iter<'b, (BExp, u64, u64)>,
-}
-
-impl<'a, 'b, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>>
-    GuardIterator<'a, 'b, BExp, Builder>
-{
-    fn new(
-        gkat: &'b mut Gkat<'a, BExp, Builder>,
-        guard: BExp,
-        iter: Iter<'b, (BExp, u64, u64)>,
-    ) -> Self {
-        GuardIterator {
-            gkat: gkat,
-            guard: guard,
-            iter: iter,
-        }
-    }
-}
-
-impl<'a, 'b, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Iterator
-    for GuardIterator<'a, 'b, BExp, Builder>
-{
-    type Item = (BExp, u64, u64);
-    fn next(&mut self) -> Option<(BExp, u64, u64)> {
-        loop {
-            match self.iter.next() {
-                Some(x) => {
-                    let guard = self.guard;
-                    let b = self.gkat.mk_and(guard, x.0);
-                    if b.is_false() {
-                        continue;
-                    } else {
-                        return Some((b, x.1, x.2));
-                    }
-                }
-                None => return None,
-            }
-        }
-    }
+    pub eps_hat: HashMap<u64, BExp>,
+    pub delta_hat: HashMap<u64, Vec<(BExp, u64, u64)>>,
 }
 
 impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
@@ -74,7 +31,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         &mut self,
         gkat: &mut Gkat<'a, BExp, Builder>,
         m: &Exp<BExp>,
-    ) -> (u64, Automaton<BExp>) {
+    ) -> Automaton<BExp> {
         let r = self.mk_raw(gkat, m);
         let st = self.mk_state();
         let mut states = r.states;
@@ -85,14 +42,15 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         states.insert(st);
         eps_hat.insert(st, eps_star);
         delta_hat.insert(st, delta_star);
-        let automaton = Automaton {
+        Automaton {
+            start: st,
             states: states,
             eps_hat: eps_hat,
             delta_hat: delta_hat,
-        };
-        (st, automaton)
+        }
     }
 
+    #[recursive]
     fn mk_raw(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, m: &Exp<BExp>) -> RawAutomaton<BExp> {
         use Exp_::*;
         match m.get() {
