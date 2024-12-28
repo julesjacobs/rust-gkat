@@ -68,11 +68,11 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
 
     pub fn is_dead(&mut self, gkat: &mut Gkat<'a, Ptr, Builder>, exp: &Exp<Ptr>) -> bool {
         use VisitResult::*;
+        self.explored.clear();
         match self.visit(gkat, exp) {
             Unknown => {
-                for x in self.explored.iter() {
-                    self.dead_states.insert(x.clone());
-                }
+                let explored = &self.explored;
+                self.dead_states.extend(explored.iter().cloned());
                 true
             }
             Live => false,
