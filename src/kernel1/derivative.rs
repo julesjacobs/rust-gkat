@@ -2,8 +2,8 @@ use super::*;
 use crate::syntax::*;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Builder> {
-    pub fn epsilon(&mut self, gkat: &mut Gkat<'a, Ptr, Builder>, m: &Exp<Ptr>) -> Ptr {
+impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
+    pub fn epsilon(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, m: &Exp<BExp>) -> BExp {
         use Exp_::*;
         match m.get() {
             Act(_) => gkat.mk_zero(),
@@ -12,7 +12,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
                 let b2 = self.epsilon(gkat, p2);
                 gkat.mk_and(b1, b2)
             }
-            If(b, p1, p2) => {
+            Ifte(b, p1, p2) => {
                 let b1 = self.epsilon(gkat, p1);
                 let b2 = self.epsilon(gkat, p2);
                 let b_b1 = gkat.mk_and(b.clone(), b1);
@@ -27,9 +27,9 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
 
     fn combine_bexp_with(
         &mut self,
-        gkat: &mut Gkat<'a, Ptr, Builder>,
-        be: Ptr,
-        m: &mut Vec<(Ptr, Exp<Ptr>, Action)>,
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        be: BExp,
+        m: &mut Vec<(BExp, Exp<BExp>, u64)>,
     ) {
         for elem in m.iter_mut() {
             let a = gkat.mk_and(be.clone(), elem.0);
@@ -39,9 +39,9 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
 
     fn combine_exp_with(
         &mut self,
-        gkat: &mut Gkat<'a, Ptr, Builder>,
-        exp: &Exp<Ptr>,
-        m: &mut Vec<(Ptr, Exp<Ptr>, Action)>,
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        exp: &Exp<BExp>,
+        m: &mut Vec<(BExp, Exp<BExp>, u64)>,
     ) {
         for elem in m.iter_mut() {
             let seq_exp = gkat.mk_seq(elem.1.clone(), exp.clone());
@@ -51,10 +51,10 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
 
     fn while_helper(
         &mut self,
-        gkat: &mut Gkat<'a, Ptr, Builder>,
-        be: &Ptr,
-        exp: &Exp<Ptr>,
-        m: &mut Vec<(Ptr, Exp<Ptr>, Action)>,
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        be: &BExp,
+        exp: &Exp<BExp>,
+        m: &mut Vec<(BExp, Exp<BExp>, u64)>,
     ) {
         let while_exp = gkat.mk_while(be.clone(), exp.clone());
         for elem in m.iter_mut() {
@@ -67,9 +67,9 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
 
     pub fn derivative(
         &mut self,
-        gkat: &mut Gkat<'a, Ptr, Builder>,
-        exp: &Exp<Ptr>,
-    ) -> Vec<(Ptr, Exp<Ptr>, Action)> {
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        exp: &Exp<BExp>,
+    ) -> Vec<(BExp, Exp<BExp>, u64)> {
         if let Some(deriv) = self.deriv_cache.get(exp) {
             return deriv.clone();
         }
@@ -81,7 +81,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
                 let e = gkat.mk_test(one_exp.clone());
                 vec![(one_exp, e, n.clone())]
             }
-            If(be, p1, p2) => {
+            Ifte(be, p1, p2) => {
                 let mut dexp1 = self.derivative(gkat, p1);
                 let mut dexp2 = self.derivative(gkat, p2);
                 let not_be = gkat.mk_not(be.clone());

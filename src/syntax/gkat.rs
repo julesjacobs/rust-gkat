@@ -4,16 +4,16 @@ use hashconsing::HConsign;
 use rsdd::builder::BottomUpBuilder;
 use rsdd::repr::{DDNNFPtr, VarLabel};
 
-pub struct Gkat<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> {
+pub struct Gkat<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> {
     // bexp states
     pub(super) name_stamp: u64,
     pub(super) name_map: HashMap<String, VarLabel>,
     pub(super) bexp_builder: &'a Builder,
     // exp states
-    pub(super) exp_hcons: HConsign<Exp_<Ptr>>,
+    pub(super) exp_hcons: HConsign<Exp_<BExp>>,
 }
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Builder> {
+impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Gkat<'a, BExp, Builder> {
     pub fn new(builder: &'a Builder) -> Self {
         Gkat {
             // bexp init

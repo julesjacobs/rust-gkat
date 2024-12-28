@@ -5,7 +5,7 @@ use rsdd::{
     repr::{DDNNFPtr, VarLabel},
 };
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Builder> {
+impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Gkat<'a, BExp, Builder> {
     fn mk_name(&mut self, s: String) -> VarLabel {
         match self.name_map.get(&s) {
             Some(x) => x.clone(),
@@ -18,20 +18,20 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Bui
         }
     }
 
-    pub fn mk_zero(&mut self) -> Ptr {
+    pub fn mk_zero(&mut self) -> BExp {
         self.bexp_builder.false_ptr()
     }
 
-    pub fn mk_one(&mut self) -> Ptr {
+    pub fn mk_one(&mut self) -> BExp {
         self.bexp_builder.true_ptr()
     }
 
-    pub fn mk_pbool(&mut self, s: String) -> Ptr {
+    pub fn mk_pbool(&mut self, s: String) -> BExp {
         let x = self.mk_name(s);
         self.bexp_builder.var(x, true)
     }
 
-    pub fn mk_or(&mut self, b1: Ptr, b2: Ptr) -> Ptr {
+    pub fn mk_or(&mut self, b1: BExp, b2: BExp) -> BExp {
         if b1.is_true() {
             self.mk_one()
         } else if b2.is_true() {
@@ -47,7 +47,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Bui
         }
     }
 
-    pub fn mk_and(&mut self, b1: Ptr, b2: Ptr) -> Ptr {
+    pub fn mk_and(&mut self, b1: BExp, b2: BExp) -> BExp {
         if b1.is_true() {
             b2
         } else if b2.is_true() {
@@ -63,7 +63,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Bui
         }
     }
 
-    pub fn mk_not(&mut self, b1: Ptr) -> Ptr {
+    pub fn mk_not(&mut self, b1: BExp) -> BExp {
         if b1.is_true() {
             self.mk_zero()
         } else if b1.is_false() {
@@ -73,7 +73,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Bui
         }
     }
 
-    pub fn from_bexp(&mut self, raw: parsing::BExp) -> Ptr {
+    pub fn from_bexp(&mut self, raw: parsing::BExp) -> BExp {
         use parsing::BExp::*;
         match raw {
             Zero => self.mk_zero(),

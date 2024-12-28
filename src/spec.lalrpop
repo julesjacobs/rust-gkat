@@ -23,7 +23,7 @@ pub Exp: Exp = {
     "(" "seq" <ps:Exp+> <p:Exp>")" => {
         ps.into_iter().rfold(p, |acc, p| Exp::Seq(Box::new(p), Box::new(acc)))
     },
-    "(" "if" <b:BExp> <p1:Exp> <p2:Exp> ")" => Exp::If(b, Box::new(p1), Box::new(p2)),
+    "(" "if" <b:BExp> <p1:Exp> <p2:Exp> ")" => Exp::Ifte(b, Box::new(p1), Box::new(p2)),
     "(" "test" <b:BExp> ")" => Exp::Test(b),
     "(" "while" <b:BExp> <p:Exp> ")" => Exp::While(b, Box::new(p))
 };

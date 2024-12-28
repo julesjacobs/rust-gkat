@@ -2,12 +2,12 @@ use super::*;
 use crate::syntax::*;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Builder> {
+impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
     pub fn equiv_iter(
         &mut self,
-        gkat: &mut Gkat<'a, Ptr, Builder>,
-        exp1: &Exp<Ptr>,
-        exp2: &Exp<Ptr>,
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        exp1: &Exp<BExp>,
+        exp2: &Exp<BExp>,
     ) -> bool {
         let mut queue = Vec::new();
         queue.push((exp1.clone(), exp2.clone()));

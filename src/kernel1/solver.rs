@@ -4,15 +4,15 @@ use disjoint_sets::UnionFindNode;
 use lru::LruCache;
 use std::{hash::Hash, marker::PhantomData, num::NonZero};
 
-pub struct Solver<Ptr, Builder> {
+pub struct Solver<BExp, Builder> {
     // search states
-    pub(super) dead_states: HashSet<Exp<Ptr>>,
-    pub(super) explored: HashSet<Exp<Ptr>>,
-    pub(super) uf_table: HashMap<Exp<Ptr>, UnionFindNode<()>>,
+    pub(super) dead_states: HashSet<Exp<BExp>>,
+    pub(super) explored: HashSet<Exp<BExp>>,
+    pub(super) uf_table: HashMap<Exp<BExp>, UnionFindNode<()>>,
     // caching
-    pub(super) deriv_cache: LruCache<Exp<Ptr>, Vec<(Ptr, Exp<Ptr>, Action)>>,
-    // builder
-    builder: PhantomData<Builder>,
+    pub(super) deriv_cache: LruCache<Exp<BExp>, Vec<(BExp, Exp<BExp>, u64)>>,
+    // phantom
+    phantom: PhantomData<Builder>,
 }
 
 impl<Ptr: Hash, Builder> Solver<Ptr, Builder> {
@@ -25,7 +25,7 @@ impl<Ptr: Hash, Builder> Solver<Ptr, Builder> {
             // caching
             deriv_cache: LruCache::new(NonZero::new(1024).unwrap()),
             // builder
-            builder: PhantomData,
+            phantom: PhantomData,
         }
     }
 

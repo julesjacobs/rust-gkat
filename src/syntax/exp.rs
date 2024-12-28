@@ -8,69 +8,40 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-#[derive(Clone, Eq)]
-pub struct Action {
-    name: String,
-    id: u64,
-}
-
-impl Debug for Action {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("Action").field(&self.name).finish()
-    }
-}
-
-impl PartialEq for Action {
-    fn eq(&self, rhs: &Action) -> bool {
-        self.id == rhs.id
-    }
-}
-
-impl Hash for Action {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_u64(self.id);
-    }
-}
-
 pub type Exp<BExp> = HConsed<Exp_<BExp>>;
 
 #[derive(Debug, Hash, Clone, PartialEq, Eq)]
 pub enum Exp_<BExp> {
-    Act(Action),
+    Act(u64),
     Seq(Exp<BExp>, Exp<BExp>),
-    If(BExp, Exp<BExp>, Exp<BExp>),
+    Ifte(BExp, Exp<BExp>, Exp<BExp>),
     Test(BExp),
     While(BExp, Exp<BExp>),
 }
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Builder> {
-    fn mk_action(&mut self, s: String) -> Action {
+impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Gkat<'a, BExp, Builder> {
+    pub fn mk_act(&mut self, s: String) -> Exp<BExp> {
         let mut hasher = AHasher::default();
         s.hash(&mut hasher);
-        let id = hasher.finish();
-        Action { name: s, id: id }
+        let a = hasher.finish();
+        self.exp_hcons.mk(Exp_::Act(a))
     }
 
-    pub fn mk_act(&mut self, s: String) -> Exp<Ptr> {
-        let x = self.mk_action(s);
-        self.exp_hcons.mk(Exp_::Act(x))
-    }
-
-    pub fn mk_skip(&mut self) -> Exp<Ptr> {
+    pub fn mk_skip(&mut self) -> Exp<BExp> {
         let b = self.bexp_builder.true_ptr();
         self.mk_test(b)
     }
 
-    pub fn mk_fail(&mut self) -> Exp<Ptr> {
+    pub fn mk_fail(&mut self) -> Exp<BExp> {
         let b = self.bexp_builder.false_ptr();
         self.mk_test(b)
     }
 
-    pub fn mk_test(&mut self, b: Ptr) -> Exp<Ptr> {
+    pub fn mk_test(&mut self, b: BExp) -> Exp<BExp> {
         self.exp_hcons.mk(Exp_::Test(b))
     }
 
-    pub fn mk_seq(&mut self, p1: Exp<Ptr>, p2: Exp<Ptr>) -> Exp<Ptr> {
+    pub fn mk_seq(&mut self, p1: Exp<BExp>, p2: Exp<BExp>) -> Exp<BExp> {
         use Exp_::*;
         match (p1.get(), p2.get()) {
             (Test(b1), Test(b2)) => {
@@ -95,7 +66,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Bui
         }
     }
 
-    pub fn mk_if(&mut self, b: Ptr, p1: Exp<Ptr>, p2: Exp<Ptr>) -> Exp<Ptr> {
+    pub fn mk_ifte(&mut self, b: BExp, p1: Exp<BExp>, p2: Exp<BExp>) -> Exp<BExp> {
         if b.is_true() {
             p1
         } else if b.is_false() {
@@ -108,15 +79,15 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Bui
             let p0 = self.mk_test(b);
             self.mk_seq(p0, p1)
         } else {
-            self.exp_hcons.mk(Exp_::If(b, p1, p2))
+            self.exp_hcons.mk(Exp_::Ifte(b, p1, p2))
         }
     }
 
-    pub fn mk_while(&mut self, b: Ptr, p: Exp<Ptr>) -> Exp<Ptr> {
+    pub fn mk_while(&mut self, b: BExp, p: Exp<BExp>) -> Exp<BExp> {
         self.exp_hcons.mk(Exp_::While(b, p))
     }
 
-    pub fn from_exp(&mut self, raw: parsing::Exp) -> Exp<Ptr> {
+    pub fn from_exp(&mut self, raw: parsing::Exp) -> Exp<BExp> {
         use parsing::Exp::*;
         match raw {
             Act(s) => self.mk_act(s),
@@ -125,11 +96,11 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Gkat<'a, Ptr, Bui
                 let p2 = self.from_exp(*p2);
                 self.mk_seq(p1, p2)
             }
-            If(b, p1, p2) => {
+            Ifte(b, p1, p2) => {
                 let b = self.from_bexp(b);
                 let p1 = self.from_exp(*p1);
                 let p2 = self.from_exp(*p2);
-                self.mk_if(b, p1, p2)
+                self.mk_ifte(b, p1, p2)
             }
             Test(b) => {
                 let b = self.from_bexp(b);

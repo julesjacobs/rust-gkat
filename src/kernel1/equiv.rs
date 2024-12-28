@@ -3,13 +3,13 @@ use crate::syntax::*;
 use recursive::recursive;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Builder> {
+impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
     #[recursive]
     pub fn equiv(
         &mut self,
-        gkat: &mut Gkat<'a, Ptr, Builder>,
-        exp1: &Exp<Ptr>,
-        exp2: &Exp<Ptr>,
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        exp1: &Exp<BExp>,
+        exp2: &Exp<BExp>,
     ) -> bool {
         let reject1 = self.reject(gkat, exp1);
         let reject2 = self.reject(gkat, exp2);

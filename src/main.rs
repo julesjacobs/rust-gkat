@@ -1,4 +1,5 @@
 mod kernel1;
+mod kernel2;
 mod parsing;
 mod syntax;
 

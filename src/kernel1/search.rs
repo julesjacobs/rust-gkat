@@ -9,8 +9,8 @@ pub enum VisitResult {
     Unknown,
 }
 
-impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Builder> {
-    pub fn reject(&mut self, gkat: &mut Gkat<'a, Ptr, Builder>, exp: &Exp<Ptr>) -> Ptr {
+impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
+    pub fn reject(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, exp: &Exp<BExp>) -> BExp {
         let dexp = self.derivative(gkat, exp);
         let eps = self.epsilon(gkat, exp);
         let zero = gkat.mk_zero();
@@ -24,8 +24,8 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
 
     fn visit_descendants(
         &mut self,
-        gkat: &mut Gkat<'a, Ptr, Builder>,
-        exps: Vec<Exp<Ptr>>,
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        exps: Vec<Exp<BExp>>,
     ) -> VisitResult {
         use VisitResult::*;
         let mut result = Unknown;
@@ -44,7 +44,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
         result
     }
 
-    pub fn visit(&mut self, gkat: &mut Gkat<'a, Ptr, Builder>, exp: &Exp<Ptr>) -> VisitResult {
+    pub fn visit(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, exp: &Exp<BExp>) -> VisitResult {
         use VisitResult::*;
         if self.dead_states.contains(exp) {
             Dead
@@ -55,7 +55,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
             let eps = self.epsilon(gkat, exp);
             if eps.is_false() {
                 let dexp = self.derivative(gkat, exp);
-                let next_exps: Vec<Exp<Ptr>> = dexp
+                let next_exps: Vec<Exp<BExp>> = dexp
                     .into_iter()
                     .filter_map(|(b, e, _)| if b.is_false() { None } else { Some(e) })
                     .collect();
@@ -66,7 +66,7 @@ impl<'a, Ptr: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, Ptr>> Solver<Ptr, Build
         }
     }
 
-    pub fn is_dead(&mut self, gkat: &mut Gkat<'a, Ptr, Builder>, exp: &Exp<Ptr>) -> bool {
+    pub fn is_dead(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, exp: &Exp<BExp>) -> bool {
         use VisitResult::*;
         self.explored.clear();
         match self.visit(gkat, exp) {
