@@ -24,21 +24,27 @@ struct Automaton<BExp> {
 }
 
 impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
-    fn from_raw(&mut self, m: RawAutomaton<BExp>) -> Automaton<BExp> {
+    fn mk_automaton(
+        &mut self,
+        gkat: &mut Gkat<'a, BExp, Builder>,
+        m: Exp<BExp>,
+    ) -> (u64, Automaton<BExp>) {
+        let r = self.mk_raw(gkat, m);
         let st = self.mk_state();
-        let mut states = m.states;
-        let eps_star = m.eps_star;
-        let delta_star = m.delta_star;
-        let mut eps_hat = m.eps_hat;
-        let mut delta_hat = m.delta_hat;
+        let mut states = r.states;
+        let eps_star = r.eps_star;
+        let delta_star = r.delta_star;
+        let mut eps_hat = r.eps_hat;
+        let mut delta_hat = r.delta_hat;
         states.insert(st);
         eps_hat.insert(st, eps_star);
         delta_hat.insert(st, delta_star);
-        Automaton {
+        let automaton = Automaton {
             states: states,
             eps_hat: eps_hat,
             delta_hat: delta_hat,
-        }
+        };
+        (st, automaton)
     }
 
     fn guard_map(gkat: &mut Gkat<'a, BExp, Builder>, guard: BExp, xs: &mut Vec<(BExp, u64, u64)>) {
@@ -54,7 +60,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
     }
 
     #[recursive]
-    fn from_exp(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, m: Exp<BExp>) -> RawAutomaton<BExp> {
+    fn mk_raw(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, m: Exp<BExp>) -> RawAutomaton<BExp> {
         use Exp_::*;
         match m.get() {
             Act(a) => {
@@ -83,8 +89,8 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             }
             Seq(p1, p2) => todo!(),
             Ifte(b, p1, p2) => {
-                let r1 = self.from_exp(gkat, p1.clone());
-                let r2 = self.from_exp(gkat, p2.clone());
+                let r1 = self.mk_raw(gkat, p1.clone());
+                let r2 = self.mk_raw(gkat, p2.clone());
                 // states
                 let mut states = r1.states;
                 states.extend(r2.states);
@@ -122,7 +128,39 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 eps_hat: HashMap::new(),
                 delta_hat: HashMap::new(),
             },
-            While(b, p) => todo!(),
+            While(b, p) => {
+                let r = self.mk_raw(gkat, p.clone());
+                // states
+                let states = r.states;
+                // eps_star
+                let eps_star = gkat.mk_not(*b);
+                // delta_star
+                let mut delta_star = r.delta_star.clone();
+                Self::guard_map(gkat, *b, &mut delta_star);
+                // eps_hat
+                let mut eps_hat = r.eps_hat.clone();
+                let nb = gkat.mk_not(*b);
+                for (_, be) in eps_hat.iter_mut() {
+                    *be = gkat.mk_and(nb, *be);
+                }
+                // delta_hat
+                let mut delta_hat = r.delta_hat;
+                for (i, elems) in delta_hat.iter_mut() {
+                    let bx = r.eps_hat.get(i).unwrap();
+                    let mut new_elems = r.delta_star.clone();
+                    let guard = gkat.mk_and(*b, *bx);
+                    Self::guard_map(gkat, guard, &mut new_elems);
+                    elems.extend(new_elems);
+                }
+                // raw_automaton
+                RawAutomaton {
+                    states: states,
+                    eps_star: eps_star,
+                    delta_star: delta_star,
+                    eps_hat: eps_hat,
+                    delta_hat: delta_hat,
+                }
+            }
         }
     }
 }
