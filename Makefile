@@ -12,7 +12,7 @@ k2/%.txt: dataset/%.txt
 	time ./target/release/rust-gkat -k k2 $<
 
 big/%.txt: dataset_big/%.txt
-	time ./target/release/rust-gkat -m sdd -k k2 $<
+	/usr/bin/time -l ./target/release/rust-gkat -m sdd -k k2 $<
 
 k1: $(K1)
 k2: $(K2)
