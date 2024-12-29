@@ -13,14 +13,14 @@ cargo build --release
 The resulting executable can be found at `target/release/rust-gkat`.
 
 ## Usage
-`rust-gkat` can operate under 2 modes for checking equivalence of boolean expressions.
-- `bdd`: binary decision diagrams (default mode)
+`rust-gkat` offers 2 solver kernels for checking equivalence of boolean expressions.
+- `k1`: symbolic derivative method (default mode)
 ``` sh
-rust-gkat -m bdd ./input/test00.txt
+rust-gkat -k k1 ./input/test00.txt
 ```
-- `sdd`: sentential decision diagrams
+- `k2`: symbolic thompson's construction
 ``` sh
-rust-gkat -m sdd ./input/test00.txt
+rust-gkat -k k2 ./input/test00.txt
 ```
 
 ## Input Format
@@ -58,21 +58,23 @@ binary form as `(seq A (seq B C))`.
 
 ## Performance and Evaluation
 Currently, we have tested `rust-gkat` on all large GKAT pairs contained in
-`dataset.zip`.  One can also use `make bdd` or `make sdd` to run `rust-gkat` on
+`dataset.zip`. One can also use `make k1` or `make k2` to run `rust-gkat` on
 all examples in the dataset.
 
+### Symbolic Derivative Method
 Even for difficult examples such as `exp9000.txt`, we achieve a very competitive
-runtime of `0.05s` and peak memory consumption of `18MB`.
+runtime of `0.04s` and peak memory consumption of `15MB` with the symbolic derivative 
+method.
 ```
-➞  /usr/bin/time -l target/release/rust-gkat -m bdd ./dataset/exp9000.txt
+➞  /usr/bin/time -l ./target/release/rust-gkat -k k1 dataset/exp9000.txt
 equiv_expected = true
 equiv_result   = true
-        0.05 real         0.05 user         0.00 sys
-            18792448  maximum resident set size
+        0.04 real         0.04 user         0.00 sys
+            14532608  maximum resident set size
                    0  average shared memory size
                    0  average unshared data size
                    0  average unshared stack size
-                1286  page reclaims
+                1004  page reclaims
                    3  page faults
                    0  swaps
                    0  block input operations
@@ -81,8 +83,63 @@ equiv_result   = true
                    0  messages received
                    0  signals received
                    0  voluntary context switches
-                   5  involuntary context switches
-           832197138  instructions retired
-           165610125  cycles elapsed
-            16630144  peak memory footprint
+                  19  involuntary context switches
+           626808277  instructions retired
+           123665227  cycles elapsed
+            13386016  peak memory footprint
+```
+
+### Symbolic Thompson's Construction
+The algorithm for symbolic thompson's construction performs much better than
+the derivative method due to algorithmic improvements. Examples provided in `dataset.zip`
+are no longer useful as runtime benchmarks as each test solves in `0.00s`.
+```
+➞  /usr/bin/time -l ./target/release/rust-gkat -k k2 dataset/exp9000.txt
+equiv_expected = true
+equiv_result   = true
+        0.00 real         0.00 user         0.00 sys
+             6979584  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+                 557  page reclaims
+                   3  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   0  voluntary context switches
+                   3  involuntary context switches
+            49674701  instructions retired
+            14603881  cycles elapsed
+             5751096  peak memory footprint
+```
+
+We provide a dataset `dataset_big.zip` containing even larger examples with expression size
+of 1,000,000. These examples are far more challenging to solve. Use `make big` to run 
+`rust-gkat` on all big examples.
+```
+➞  /usr/bin/time -l ./target/release/rust-gkat -k k2 dataset_big/big02.txt
+equiv_expected = true
+equiv_result   = true
+      166.44 real       165.24 user         1.05 sys
+          1316077568  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+               86351  page reclaims
+                   3  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   1  voluntary context switches
+               14087  involuntary context switches
+       3236003182277  instructions retired
+        685796237324  cycles elapsed
+           859768944  peak memory footprint
 ```
