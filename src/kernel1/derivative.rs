@@ -1,3 +1,4 @@
+use super::guard::*;
 use super::*;
 use crate::syntax::*;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
@@ -25,46 +26,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         }
     }
 
-    fn combine_bexp_with(
-        &mut self,
-        gkat: &mut Gkat<'a, BExp, Builder>,
-        be: BExp,
-        m: &mut Vec<(BExp, Exp<BExp>, u64)>,
-    ) {
-        for elem in m.iter_mut() {
-            let a = gkat.mk_and(be.clone(), elem.0);
-            (*elem).0 = a;
-        }
-    }
-
-    fn combine_exp_with(
-        &mut self,
-        gkat: &mut Gkat<'a, BExp, Builder>,
-        exp: &Exp<BExp>,
-        m: &mut Vec<(BExp, Exp<BExp>, u64)>,
-    ) {
-        for elem in m.iter_mut() {
-            let seq_exp = gkat.mk_seq(elem.1.clone(), exp.clone());
-            (*elem).1 = seq_exp;
-        }
-    }
-
-    fn while_helper(
-        &mut self,
-        gkat: &mut Gkat<'a, BExp, Builder>,
-        be: &BExp,
-        exp: &Exp<BExp>,
-        m: &mut Vec<(BExp, Exp<BExp>, u64)>,
-    ) {
-        let while_exp = gkat.mk_while(be.clone(), exp.clone());
-        for elem in m.iter_mut() {
-            let seq_exp = gkat.mk_seq(elem.1.clone(), while_exp.clone());
-            let b = gkat.mk_and(elem.0, be.clone());
-            (*elem).0 = b;
-            (*elem).1 = seq_exp;
-        }
-    }
-
     pub fn derivative(
         &mut self,
         gkat: &mut Gkat<'a, BExp, Builder>,
@@ -81,28 +42,40 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 let e = gkat.mk_test(one_exp.clone());
                 vec![(one_exp, e, n.clone())]
             }
-            Ifte(be, p1, p2) => {
-                let mut dexp1 = self.derivative(gkat, p1);
-                let mut dexp2 = self.derivative(gkat, p2);
-                let not_be = gkat.mk_not(be.clone());
-                self.combine_bexp_with(gkat, be.clone(), &mut dexp1);
-                self.combine_bexp_with(gkat, not_be, &mut dexp2);
-                dexp1.append(&mut dexp2);
-                dexp1
+            Ifte(b, p1, p2) => {
+                let nb = gkat.mk_not(*b);
+                let dexp1 = self.derivative(gkat, p1);
+                let dexp2 = self.derivative(gkat, p2);
+                let mut dexp: Vec<_> = GuardIterator::new(gkat, *b, dexp1.iter()).collect();
+                let dexp_ext = GuardIterator::new(gkat, nb, dexp2.iter());
+                dexp.extend(dexp_ext);
+                dexp
             }
             Seq(p1, p2) => {
                 let eps = self.epsilon(gkat, p1);
-                let mut dexp1 = self.derivative(gkat, p1);
-                let mut dexp2 = self.derivative(gkat, p2);
-                self.combine_exp_with(gkat, p2, &mut dexp1);
-                self.combine_bexp_with(gkat, eps, &mut dexp2);
-                dexp1.append(&mut dexp2);
-                dexp1
+                let mut dexp = self.derivative(gkat, p1);
+                let dexp2 = self.derivative(gkat, p2);
+                for (_, e, _) in dexp.iter_mut() {
+                    let seq_exp = gkat.mk_seq(e.clone(), p2.clone());
+                    *e = seq_exp
+                }
+                let dexp_ext = GuardIterator::new(gkat, eps, dexp2.iter());
+                dexp.extend(dexp_ext);
+                dexp
             }
             While(be, p) => {
-                let mut dexp = self.derivative(gkat, p);
-                self.while_helper(gkat, be, p, &mut dexp);
-                dexp
+                let dexp = self.derivative(gkat, p);
+                dexp.into_iter()
+                    .filter_map(|(b, e, a)| {
+                        let guard = gkat.mk_and(b, *be);
+                        if guard.is_false() {
+                            None
+                        } else {
+                            let seq_exp = gkat.mk_seq(e.clone(), exp.clone());
+                            Some((guard, seq_exp, a))
+                        }
+                    })
+                    .collect()
             }
         };
         self.deriv_cache.push(exp.clone(), deriv.clone());
