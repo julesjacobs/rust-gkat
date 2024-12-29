@@ -105,7 +105,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 dexp
             }
         };
-        self.deriv_cache.put(exp.clone(), deriv.clone());
+        self.deriv_cache.push(exp.clone(), deriv.clone());
         return deriv;
     }
 }

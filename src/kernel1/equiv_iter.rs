@@ -9,9 +9,9 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         exp1: &Exp<BExp>,
         exp2: &Exp<BExp>,
     ) -> bool {
-        let mut queue = Vec::new();
-        queue.push((exp1.clone(), exp2.clone()));
-        while let Some((exp1, exp2)) = queue.pop() {
+        let mut stack = Vec::new();
+        stack.push((exp1.clone(), exp2.clone()));
+        while let Some((exp1, exp2)) = stack.pop() {
             let reject1 = self.reject(gkat, &exp1);
             let reject2 = self.reject(gkat, &exp2);
 
@@ -54,7 +54,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                             continue;
                         } else if p == *q {
                             exp1_uf.union(&mut exp2_uf);
-                            queue.push((next_exp1.clone(), next_exp2.clone()));
+                            stack.push((next_exp1.clone(), next_exp2.clone()));
                         } else {
                             let result1 = self.is_dead(gkat, &next_exp1);
                             let result2 = self.is_dead(gkat, &next_exp2);
