@@ -1,7 +1,7 @@
 use super::guard::*;
 use super::solver::*;
 use crate::syntax::*;
-use ahash::{HashMap, HashMapExt, HashSet};
+use ahash::{HashMap, HashMapExt};
 use recursive::recursive;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 

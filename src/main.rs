@@ -6,8 +6,8 @@ mod syntax;
 use clap::{Parser, ValueEnum};
 use parsing::*;
 use rsdd::{
-    builder::{self, cache::AllIteTable},
-    repr::{BddPtr, VTree, VarLabel},
+    builder::{self},
+    repr::{VTree, VarLabel},
 };
 use std::fs;
 use syntax::*;
@@ -29,7 +29,10 @@ fn main() {
     let args = Args::parse();
     let file = fs::read_to_string(args.input).expect("cannot read file");
     let (exp1, exp2, b) = parse(file);
-    let builder = builder::bdd::RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
+
+    let order: Vec<VarLabel> = (0..1024).map(|x| VarLabel::new(x)).collect();
+    let vtree = VTree::right_linear(&order);
+    let builder = builder::sdd::CompressionSddBuilder::new(vtree);
     let mut gkat = Gkat::new(&builder);
     let exp1 = gkat.from_exp(exp1);
     let exp2 = gkat.from_exp(exp2);

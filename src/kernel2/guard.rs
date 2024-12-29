@@ -28,6 +28,7 @@ impl<'a, 'b, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Iterator
     for GuardIterator<'a, 'b, BExp, Builder>
 {
     type Item = (BExp, u64, u64);
+    #[inline]
     fn next(&mut self) -> Option<(BExp, u64, u64)> {
         loop {
             match self.iter.next() {
