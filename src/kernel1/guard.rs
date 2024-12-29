@@ -1,20 +1,27 @@
-use crate::syntax::*;
-use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
+use super::*;
 use std::slice::Iter;
 
-pub struct GuardIterator<'a, 'b, BExp: DDNNFPtr<'a>, Builder> {
-    gkat: &'b mut Gkat<'a, BExp, Builder>,
-    guard: BExp,
-    iter: Iter<'b, (BExp, Exp<BExp>, u64)>,
+pub struct GuardIterator<'a, A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
+    gkat: &'a mut Gkat<A, M, Builder>,
+    guard: BExp<A, M>,
+    iter: Iter<'a, (BExp<A, M>, Exp<BExp<A, M>>, u64)>,
 }
 
-impl<'a, 'b, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>>
-    GuardIterator<'a, 'b, BExp, Builder>
+impl<'a, A, M, Builder> GuardIterator<'a, A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
 {
     pub fn new(
-        gkat: &'b mut Gkat<'a, BExp, Builder>,
-        guard: BExp,
-        iter: Iter<'b, (BExp, Exp<BExp>, u64)>,
+        gkat: &'a mut Gkat<A, M, Builder>,
+        guard: BExp<A, M>,
+        iter: Iter<'a, (BExp<A, M>, Exp<BExp<A, M>>, u64)>,
     ) -> Self {
         GuardIterator {
             gkat: gkat,
@@ -24,12 +31,16 @@ impl<'a, 'b, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>>
     }
 }
 
-impl<'a, 'b, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Iterator
-    for GuardIterator<'a, 'b, BExp, Builder>
+impl<'a, A, M, Builder> Iterator for GuardIterator<'a, A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
 {
-    type Item = (BExp, Exp<BExp>, u64);
+    type Item = (BExp<A, M>, Exp<BExp<A, M>>, u64);
+
     #[inline]
-    fn next(&mut self) -> Option<(BExp, Exp<BExp>, u64)> {
+    fn next(&mut self) -> Option<(BExp<A, M>, Exp<BExp<A, M>>, u64)> {
         loop {
             match self.iter.next() {
                 Some(x) => {

@@ -26,7 +26,9 @@ recursive = "0.1.1"
 ahash = "0.8.11"
 hashconsing = "1.6.0"
 disjoint-sets = "0.4.2"
-rsdd = { git = "https://github.com/neuppl/rsdd" }
+# rsdd = { git = "https://github.com/neuppl/rsdd" }
+# oxidd = { version = "0.9.0", features = ["manager-pointer"] }
+xdd = "0.1.0"
 lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
 clap = { version = "4.5.18", features = ["derive"] }
 lru = "0.12.5"

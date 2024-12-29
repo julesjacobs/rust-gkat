@@ -13,17 +13,9 @@ cargo build --release
 The resulting executable can be found at `target/release/rust-gkat`.
 
 ## Usage
-`rust-gkat` offers 2 modes and 2 solver kernels for checking equivalence of boolean expressions.
+`rust-gkat` offers 2 solver kernels for checking equivalence of boolean expressions.
 Modes and kernels can be combined freely.
 
-- mode `bdd`: binary decision diagram (default)
-``` sh
-rust-gkat -m bdd ./input/test00.txt
-```
-- mode `sdd`: sentential decision diagram
-``` sh
-rust-gkat -m sdd ./input/test00.txt
-```
 - kernel `k1`: symbolic derivative method (default)
 ``` sh
 rust-gkat -k k1 ./input/test00.txt
@@ -128,18 +120,19 @@ equiv_result   = true
 ```
 
 We provide a dataset `dataset_big.zip` containing even larger examples with expression size
-of 1,000,000. These examples are far more challenging to solve. Use `make big` to run 
+of 1,000,000. These examples are far more challenging to solve. Kernel1 (derivative method) 
+will not be able to solve some of these problems in a timely manner. Use `make big` to run 
 `rust-gkat` on all big examples.
 ```
 ➞  /usr/bin/time -l ./target/release/rust-gkat -k k2 dataset_big/big02.txt
 equiv_expected = true
 equiv_result   = true
-      166.44 real       165.24 user         1.05 sys
-          1316077568  maximum resident set size
+        4.53 real         4.30 user         0.21 sys
+          1926316032  maximum resident set size
                    0  average shared memory size
                    0  average unshared data size
                    0  average unshared stack size
-               86351  page reclaims
+              139711  page reclaims
                    3  page faults
                    0  swaps
                    0  block input operations
@@ -147,9 +140,9 @@ equiv_result   = true
                    0  messages sent
                    0  messages received
                    0  signals received
-                   1  voluntary context switches
-               14087  involuntary context switches
-       3236003182277  instructions retired
-        685796237324  cycles elapsed
-           859768944  peak memory footprint
+                   0  voluntary context switches
+                 771  involuntary context switches
+         53156213051  instructions retired
+         19673676055  cycles elapsed
+          1564968856  peak memory footprint
 ```

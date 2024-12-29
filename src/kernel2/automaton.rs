@@ -1,9 +1,6 @@
-use super::guard::*;
-use super::solver::*;
-use crate::syntax::*;
+use super::*;
 use ahash::{HashMap, HashMapExt};
 use recursive::recursive;
-use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
 struct RawAutomaton<BExp> {
     // pseudo-state behavior
@@ -21,12 +18,17 @@ pub struct Automaton<BExp> {
     pub delta_hat: HashMap<u64, Vec<(BExp, u64, u64)>>,
 }
 
-impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
+impl<A, M, Builder> Solver<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
     pub fn mk_automaton(
         &mut self,
-        gkat: &mut Gkat<'a, BExp, Builder>,
-        m: &Exp<BExp>,
-    ) -> (u64, Automaton<BExp>) {
+        gkat: &mut Gkat<A, M, Builder>,
+        m: &Exp<BExp<A, M>>,
+    ) -> (u64, Automaton<BExp<A, M>>) {
         let r = self.mk_raw(gkat, m);
         let st = self.mk_state();
         let eps_star = r.eps_star;
@@ -43,7 +45,11 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
     }
 
     #[recursive]
-    fn mk_raw(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, m: &Exp<BExp>) -> RawAutomaton<BExp> {
+    fn mk_raw(
+        &mut self,
+        gkat: &mut Gkat<A, M, Builder>,
+        m: &Exp<BExp<A, M>>,
+    ) -> RawAutomaton<BExp<A, M>> {
         use Exp_::*;
         match m.get() {
             Act(a) => {
@@ -125,7 +131,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 }
             }
             Test(b) => RawAutomaton {
-                eps_star: *b,
+                eps_star: b.clone(),
                 delta_star: vec![],
                 eps_hat: HashMap::new(),
                 delta_hat: HashMap::new(),

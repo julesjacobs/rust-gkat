@@ -1,37 +1,33 @@
 use super::*;
 use crate::parsing;
-use rsdd::{
-    builder::BottomUpBuilder,
-    repr::{DDNNFPtr, VarLabel},
-};
 
-impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Gkat<'a, BExp, Builder> {
-    fn mk_name(&mut self, s: String) -> VarLabel {
-        match self.name_map.get(&s) {
-            Some(x) => *x,
-            None => {
-                self.name_stamp += 1;
-                let x = VarLabel::new(self.name_stamp);
-                self.name_map.insert(s, x);
-                x
-            }
+pub type BExp<A, M> = NodeIndex<A, M>;
+
+impl<A, M, Builder> Gkat<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
+    pub fn mk_zero(&mut self) -> BExp<A, M> {
+        NodeIndex::FALSE
+    }
+
+    pub fn mk_one(&mut self) -> BExp<A, M> {
+        NodeIndex::TRUE
+    }
+
+    pub fn mk_pbool(&mut self, s: String) -> BExp<A, M> {
+        if let Some(x) = self.name_map.get(&s) {
+            return self.bexp_builder.single_variable(*x);
         }
+        self.name_stamp += 1;
+        let x = VariableIndex(self.name_stamp as u16);
+        self.name_map.insert(s, x);
+        self.bexp_builder.single_variable(x)
     }
 
-    pub fn mk_zero(&mut self) -> BExp {
-        self.bexp_builder.false_ptr()
-    }
-
-    pub fn mk_one(&mut self) -> BExp {
-        self.bexp_builder.true_ptr()
-    }
-
-    pub fn mk_pbool(&mut self, s: String) -> BExp {
-        let x = self.mk_name(s);
-        self.bexp_builder.var(x, true)
-    }
-
-    pub fn mk_or(&mut self, b1: BExp, b2: BExp) -> BExp {
+    pub fn mk_or(&mut self, b1: BExp<A, M>, b2: BExp<A, M>) -> BExp<A, M> {
         if b1.is_true() {
             self.mk_one()
         } else if b2.is_true() {
@@ -47,7 +43,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Gkat<'a, BExp, 
         }
     }
 
-    pub fn mk_and(&mut self, b1: BExp, b2: BExp) -> BExp {
+    pub fn mk_and(&mut self, b1: BExp<A, M>, b2: BExp<A, M>) -> BExp<A, M> {
         if b1.is_true() {
             b2
         } else if b2.is_true() {
@@ -63,17 +59,17 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Gkat<'a, BExp, 
         }
     }
 
-    pub fn mk_not(&mut self, b1: BExp) -> BExp {
+    pub fn mk_not(&mut self, b1: BExp<A, M>) -> BExp<A, M> {
         if b1.is_true() {
             self.mk_zero()
         } else if b1.is_false() {
             self.mk_one()
         } else {
-            self.bexp_builder.negate(b1)
+            self.bexp_builder.not(b1)
         }
     }
 
-    pub fn from_bexp(&mut self, raw: parsing::BExp) -> BExp {
+    pub fn from_bexp(&mut self, raw: parsing::BExp) -> BExp<A, M> {
         use parsing::BExp::*;
         match raw {
             Zero => self.mk_zero(),

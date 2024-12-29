@@ -1,9 +1,12 @@
 use super::*;
-use crate::syntax::*;
-use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
-    pub fn reject(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, exp: &Exp<BExp>) -> BExp {
+impl<A, M, Builder> Solver<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
+    pub fn reject(&mut self, gkat: &mut Gkat<A, M, Builder>, exp: &Exp<BExp<A, M>>) -> BExp<A, M> {
         let dexp = self.derivative(gkat, exp);
         let eps = self.epsilon(gkat, exp);
         dexp.iter().fold(gkat.mk_not(eps), |acc, (b, _, _)| {
@@ -12,7 +15,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         })
     }
 
-    pub fn is_dead(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, exp: &Exp<BExp>) -> bool {
+    pub fn is_dead(&mut self, gkat: &mut Gkat<A, M, Builder>, exp: &Exp<BExp<A, M>>) -> bool {
         let mut stack = Vec::new();
         stack.push(exp.clone());
         self.explored.clear();

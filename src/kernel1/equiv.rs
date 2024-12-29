@@ -1,19 +1,19 @@
 use super::*;
-use crate::syntax::*;
 use recursive::recursive;
-use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
+impl<A, M, Builder> Solver<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
     #[recursive]
     pub fn equiv(
         &mut self,
-        gkat: &mut Gkat<'a, BExp, Builder>,
-        exp1: &Exp<BExp>,
-        exp2: &Exp<BExp>,
+        gkat: &mut Gkat<A, M, Builder>,
+        exp1: &Exp<BExp<A, M>>,
+        exp2: &Exp<BExp<A, M>>,
     ) -> bool {
-        let reject1 = self.reject(gkat, exp1);
-        let reject2 = self.reject(gkat, exp2);
-
         let mut uf1 = self.get_uf(exp1);
         let mut uf2 = self.get_uf(exp2);
 
@@ -28,6 +28,9 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             let eps2 = self.epsilon(gkat, exp2);
             let dexp1 = self.derivative(gkat, exp1);
             let dexp2 = self.derivative(gkat, exp2);
+            let reject1 = self.reject(gkat, exp1);
+            let reject2 = self.reject(gkat, exp2);
+
             if !(eps1 == eps2) {
                 return false;
             }

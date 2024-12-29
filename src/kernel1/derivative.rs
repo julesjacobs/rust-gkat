@@ -1,10 +1,12 @@
-use super::guard::*;
 use super::*;
-use crate::syntax::*;
-use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
-    pub fn epsilon(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, m: &Exp<BExp>) -> BExp {
+impl<A, M, Builder> Solver<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
+    pub fn epsilon(&mut self, gkat: &mut Gkat<A, M, Builder>, m: &Exp<BExp<A, M>>) -> BExp<A, M> {
         if let Some(eps) = self.eps_cache.get(m) {
             return *eps;
         }
@@ -33,9 +35,9 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
 
     pub fn derivative(
         &mut self,
-        gkat: &mut Gkat<'a, BExp, Builder>,
-        exp: &Exp<BExp>,
-    ) -> Vec<(BExp, Exp<BExp>, u64)> {
+        gkat: &mut Gkat<A, M, Builder>,
+        exp: &Exp<BExp<A, M>>,
+    ) -> Vec<(BExp<A, M>, Exp<BExp<A, M>>, u64)> {
         if let Some(deriv) = self.deriv_cache.get(exp) {
             return deriv.clone();
         }

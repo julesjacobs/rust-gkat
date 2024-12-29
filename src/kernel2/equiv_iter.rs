@@ -1,15 +1,18 @@
 use super::*;
-use crate::syntax::*;
-use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
+impl<A, M, Builder> Solver<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
     pub fn equiv_iter(
         &mut self,
-        gkat: &mut Gkat<'a, BExp, Builder>,
+        gkat: &mut Gkat<A, M, Builder>,
         i: u64,
         j: u64,
-        m: &Automaton<BExp>,
-        n: &Automaton<BExp>,
+        m: &Automaton<BExp<A, M>>,
+        n: &Automaton<BExp<A, M>>,
     ) -> bool {
         let mut stack = Vec::new();
         stack.push((i, j));

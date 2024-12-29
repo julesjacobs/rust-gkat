@@ -1,8 +1,14 @@
+use super::*;
 use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
 use std::marker::PhantomData;
 
-pub struct Solver<BExp, Builder> {
+pub struct Solver<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
     // automaton states
     pub(super) state_stamp: u64,
     // search states
@@ -10,11 +16,17 @@ pub struct Solver<BExp, Builder> {
     pub(super) explored: HashSet<u64>,
     pub(super) uf_table: HashMap<u64, UnionFindNode<()>>,
     // phantom
-    phantom0: PhantomData<BExp>,
-    phantom1: PhantomData<Builder>,
+    phantom0: PhantomData<A>,
+    phantom1: PhantomData<M>,
+    phantom2: PhantomData<Builder>,
 }
 
-impl<BExp, Builder> Solver<BExp, Builder> {
+impl<A, M, Builder> Solver<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
     pub fn new() -> Self {
         Solver {
             // automaton states
@@ -26,6 +38,7 @@ impl<BExp, Builder> Solver<BExp, Builder> {
             // phantom
             phantom0: PhantomData,
             phantom1: PhantomData,
+            phantom2: PhantomData,
         }
     }
 

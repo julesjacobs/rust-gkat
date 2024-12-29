@@ -1,19 +1,28 @@
 use super::*;
 use ahash::HashMap;
 use hashconsing::HConsign;
-use rsdd::repr::{DDNNFPtr, VarLabel};
 
-pub struct Gkat<'a, BExp: DDNNFPtr<'a>, Builder> {
+pub struct Gkat<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
     // bexp states
     pub(super) name_stamp: u64,
-    pub(super) name_map: HashMap<String, VarLabel>,
-    pub(super) bexp_builder: &'a Builder,
+    pub(super) name_map: HashMap<String, VariableIndex>,
+    pub(super) bexp_builder: Builder,
     // exp states
-    pub(super) exp_hcons: HConsign<Exp_<BExp>>,
+    pub(super) exp_hcons: HConsign<Exp_<BExp<A, M>>>,
 }
 
-impl<'a, BExp: DDNNFPtr<'a>, Builder> Gkat<'a, BExp, Builder> {
-    pub fn new(builder: &'a Builder) -> Self {
+impl<A, M, Builder> Gkat<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
+    pub fn new(builder: Builder) -> Self {
         Gkat {
             // bexp init
             name_stamp: 0,

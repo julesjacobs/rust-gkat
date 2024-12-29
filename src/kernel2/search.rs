@@ -1,15 +1,17 @@
-use super::automaton::*;
 use super::*;
-use crate::syntax::*;
-use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
-impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
+impl<A, M, Builder> Solver<A, M, Builder>
+where
+    A: NodeAddress,
+    M: Multiplicity,
+    Builder: DecisionDiagramFactory<A, M>,
+{
     pub fn reject(
         &mut self,
-        gkat: &mut Gkat<'a, BExp, Builder>,
+        gkat: &mut Gkat<A, M, Builder>,
         st: u64,
-        m: &Automaton<BExp>,
-    ) -> BExp {
+        m: &Automaton<BExp<A, M>>,
+    ) -> BExp<A, M> {
         let eps = m.eps_hat.get(&st).unwrap();
         let mut result = gkat.mk_not(*eps);
         for (b, _, _) in m.delta_hat.get(&st).unwrap() {
@@ -19,7 +21,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         result
     }
 
-    pub fn is_dead(&mut self, st: u64, m: &Automaton<BExp>) -> bool {
+    pub fn is_dead(&mut self, st: u64, m: &Automaton<BExp<A, M>>) -> bool {
         let mut stack = Vec::new();
         stack.push(st);
         self.explored.clear();
