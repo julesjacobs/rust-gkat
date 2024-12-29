@@ -13,12 +13,22 @@ cargo build --release
 The resulting executable can be found at `target/release/rust-gkat`.
 
 ## Usage
-`rust-gkat` offers 2 solver kernels for checking equivalence of boolean expressions.
-- `k1`: symbolic derivative method (default mode)
+`rust-gkat` offers 2 modes and 2 solver kernels for checking equivalence of boolean expressions.
+Modes and kernels can be combined freely.
+
+- mode `bdd`: binary decision diagram (default)
+``` sh
+rust-gkat -m bdd ./input/test00.txt
+```
+- mode `sdd`: sentential decision diagram
+``` sh
+rust-gkat -m sdd ./input/test00.txt
+```
+- kernel `k1`: symbolic derivative method (default)
 ``` sh
 rust-gkat -k k1 ./input/test00.txt
 ```
-- `k2`: symbolic thompson's construction
+- kernel `k2`: symbolic thompson's construction
 ``` sh
 rust-gkat -k k2 ./input/test00.txt
 ```
