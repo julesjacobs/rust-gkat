@@ -6,8 +6,6 @@ use recursive::recursive;
 use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
 struct RawAutomaton<BExp> {
-    // all states
-    states: HashSet<u64>,
     // pseudo-state behavior
     eps_star: BExp,
     delta_star: Vec<(BExp, u64, u64)>,
@@ -18,8 +16,6 @@ struct RawAutomaton<BExp> {
 
 #[derive(Debug)]
 pub struct Automaton<BExp> {
-    // all states
-    pub states: HashSet<u64>,
     // state behaviors
     pub eps_hat: HashMap<u64, BExp>,
     pub delta_hat: HashMap<u64, Vec<(BExp, u64, u64)>>,
@@ -33,16 +29,13 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
     ) -> (u64, Automaton<BExp>) {
         let r = self.mk_raw(gkat, m);
         let st = self.mk_state();
-        let mut states = r.states;
         let eps_star = r.eps_star;
         let delta_star = r.delta_star;
         let mut eps_hat = r.eps_hat;
         let mut delta_hat = r.delta_hat;
-        states.insert(st);
         eps_hat.insert(st, eps_star);
         delta_hat.insert(st, delta_star);
         let automaton = Automaton {
-            states: states,
             eps_hat: eps_hat,
             delta_hat: delta_hat,
         };
@@ -55,9 +48,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
         match m.get() {
             Act(a) => {
                 let st = self.mk_state();
-                // states
-                let mut states = HashSet::default();
-                states.insert(st);
                 // eps_star
                 let eps_star = gkat.mk_zero();
                 // delta_star
@@ -70,7 +60,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 delta_hat.insert(st, vec![]);
                 // raw_automaton
                 RawAutomaton {
-                    states: states,
                     eps_star: eps_star,
                     delta_star: delta_star,
                     eps_hat: eps_hat,
@@ -80,9 +69,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             Seq(p1, p2) => {
                 let r1 = self.mk_raw(gkat, p1);
                 let r2 = self.mk_raw(gkat, p2);
-                // states
-                let mut states = r1.states;
-                states.extend(r2.states);
                 // eps_star
                 let eps_star = gkat.mk_and(r1.eps_star, r2.eps_star);
                 // delta_star
@@ -105,7 +91,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 delta_hat.extend(r2.delta_hat);
                 // raw_automaton
                 RawAutomaton {
-                    states: states,
                     eps_star: eps_star,
                     delta_star: delta_star,
                     eps_hat: eps_hat,
@@ -115,9 +100,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             Ifte(b, p1, p2) => {
                 let r1 = self.mk_raw(gkat, p1);
                 let r2 = self.mk_raw(gkat, p2);
-                // states
-                let mut states = r1.states;
-                states.extend(r2.states);
                 // eps_star
                 let nb = gkat.mk_not(*b);
                 let r1_eps = gkat.mk_and(*b, r1.eps_star);
@@ -136,7 +118,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 delta_hat.extend(r2.delta_hat);
                 // raw_automaton
                 RawAutomaton {
-                    states: states,
                     eps_star: eps_star,
                     delta_star: delta_star,
                     eps_hat: eps_hat,
@@ -144,7 +125,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 }
             }
             Test(b) => RawAutomaton {
-                states: HashSet::default(),
                 eps_star: *b,
                 delta_star: vec![],
                 eps_hat: HashMap::new(),
@@ -152,8 +132,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             },
             While(b, p) => {
                 let r = self.mk_raw(gkat, p);
-                // states
-                let states = r.states;
                 // eps_star
                 let eps_star = gkat.mk_not(*b);
                 // delta_star
@@ -174,7 +152,6 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 }
                 // raw_automaton
                 RawAutomaton {
-                    states: states,
                     eps_star: eps_star,
                     delta_star: delta_star,
                     eps_hat: eps_hat,

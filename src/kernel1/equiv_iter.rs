@@ -33,14 +33,14 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                     return false;
                 }
                 let assert1 = dexp2.iter().all(|(b0, exp, _)| {
-                    let b1 = gkat.mk_and(reject1.clone(), b0.clone());
+                    let b1 = gkat.mk_and(reject1, *b0);
                     b1.is_false() || self.is_dead(gkat, &exp)
                 });
                 if !assert1 {
                     return false;
                 }
                 let assert2 = dexp1.iter().all(|(b0, exp, _)| {
-                    let b1 = gkat.mk_and(reject2.clone(), b0.clone());
+                    let b1 = gkat.mk_and(reject2, *b0);
                     b1.is_false() || self.is_dead(gkat, &exp)
                 });
                 if !assert2 {
@@ -49,7 +49,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
                 let mut assert3;
                 for (be1, next_exp1, p) in dexp1 {
                     for (be2, next_exp2, q) in &dexp2 {
-                        let b1b2 = gkat.mk_and(be1.clone(), be2.clone());
+                        let b1b2 = gkat.mk_and(be1, *be2);
                         if b1b2.is_false() {
                             continue;
                         } else if p == *q {

@@ -50,7 +50,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             let mut assert3;
             for (be1, st1, p) in delta1 {
                 for (be2, st2, q) in delta2 {
-                    let b1b2 = gkat.mk_and(be1.clone(), be2.clone());
+                    let b1b2 = gkat.mk_and(*be1, *be2);
                     if b1b2.is_false() {
                         continue;
                     } else if p == q {

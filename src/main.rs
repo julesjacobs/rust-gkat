@@ -4,7 +4,6 @@ mod parsing;
 mod syntax;
 
 use clap::{Parser, ValueEnum};
-use kernel1::*;
 use parsing::*;
 use rsdd::{
     builder::{self, cache::AllIteTable},
@@ -19,10 +18,18 @@ enum Mode {
     Sdd,
 }
 
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum Kernel {
+    K1,
+    K2,
+}
+
 #[derive(Parser, Debug)]
 struct Args {
     #[arg(short, long, value_enum, default_value_t = Mode::Bdd)]
     mode: Mode,
+    #[arg(short, long, value_enum, default_value_t = Kernel::K1)]
+    kernel: Kernel,
     input: String,
 }
 
@@ -68,7 +75,7 @@ fn main() {
     let exp2 = gkat.from_exp(exp2);
     let (i, m) = solver.mk_automaton(&mut gkat, &exp1);
     let (j, n) = solver.mk_automaton(&mut gkat, &exp2);
-    let result = solver.equiv(&mut gkat, i, j, &m, &n);
+    let result = solver.equiv_iter(&mut gkat, i, j, &m, &n);
 
     println!("equiv_expected = {}", b);
     println!("equiv_result   = {}", result);
