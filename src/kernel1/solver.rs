@@ -10,6 +10,7 @@ pub struct Solver<BExp, Builder> {
     pub(super) explored: HashSet<Exp<BExp>>,
     pub(super) uf_table: HashMap<Exp<BExp>, UnionFindNode<()>>,
     // caching
+    pub(super) eps_cache: LruCache<Exp<BExp>, BExp>,
     pub(super) deriv_cache: LruCache<Exp<BExp>, Vec<(BExp, Exp<BExp>, u64)>>,
     // phantom
     phantom: PhantomData<Builder>,
@@ -23,6 +24,7 @@ impl<Ptr: Hash, Builder> Solver<Ptr, Builder> {
             explored: HashSet::default(),
             uf_table: HashMap::default(),
             // caching
+            eps_cache: LruCache::new(NonZero::new(1024).unwrap()),
             deriv_cache: LruCache::new(NonZero::new(1024).unwrap()),
             // builder
             phantom: PhantomData,

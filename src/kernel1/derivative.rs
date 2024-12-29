@@ -5,8 +5,11 @@ use rsdd::{builder::BottomUpBuilder, repr::DDNNFPtr};
 
 impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Builder> {
     pub fn epsilon(&mut self, gkat: &mut Gkat<'a, BExp, Builder>, m: &Exp<BExp>) -> BExp {
+        if let Some(eps) = self.eps_cache.get(m) {
+            return *eps;
+        }
         use Exp_::*;
-        match m.get() {
+        let eps = match m.get() {
             Act(_) => gkat.mk_zero(),
             Seq(p1, p2) => {
                 let b1 = self.epsilon(gkat, p1);
@@ -16,14 +19,16 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             Ifte(b, p1, p2) => {
                 let b1 = self.epsilon(gkat, p1);
                 let b2 = self.epsilon(gkat, p2);
-                let b_b1 = gkat.mk_and(b.clone(), b1);
-                let nb = gkat.mk_not(b.clone());
+                let b_b1 = gkat.mk_and(*b, b1);
+                let nb = gkat.mk_not(*b);
                 let nb_b2 = gkat.mk_and(nb, b2);
                 gkat.mk_or(b_b1, nb_b2)
             }
-            Test(b) => b.clone(),
-            While(b, _) => gkat.mk_not(b.clone()),
-        }
+            Test(b) => *b,
+            While(b, _) => gkat.mk_not(*b),
+        };
+        self.eps_cache.push(m.clone(), eps);
+        return eps;
     }
 
     pub fn derivative(
@@ -39,8 +44,8 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Solver<BExp, Bu
             Test(_) => vec![],
             Act(n) => {
                 let one_exp = gkat.mk_one();
-                let e = gkat.mk_test(one_exp.clone());
-                vec![(one_exp, e, n.clone())]
+                let e = gkat.mk_test(one_exp);
+                vec![(one_exp, e, *n)]
             }
             Ifte(b, p1, p2) => {
                 let nb = gkat.mk_not(*b);
