@@ -6,8 +6,8 @@ mod syntax;
 use clap::{Parser, ValueEnum};
 use parsing::*;
 use rsdd::{
-    builder::{self, cache::AllIteTable},
-    repr::{BddPtr, VTree, VarLabel},
+    builder::{bdd, cache::AllIteTable, sdd},
+    repr::{VTree, VarLabel},
 };
 use std::fs;
 use syntax::*;
@@ -40,8 +40,7 @@ fn main() {
 
     let result = match args.mode {
         Mode::Bdd => {
-            let builder =
-                builder::bdd::RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
+            let builder = bdd::RobddBuilder::<AllIteTable<_>>::new_with_linear_order(1024);
             let mut gkat = Gkat::new(&builder);
             let exp1 = gkat.from_exp(exp1);
             let exp2 = gkat.from_exp(exp2);
@@ -61,7 +60,7 @@ fn main() {
         Mode::Sdd => {
             let order: Vec<VarLabel> = (0..1024).map(|x| VarLabel::new(x)).collect();
             let vtree = VTree::right_linear(&order);
-            let builder = builder::sdd::CompressionSddBuilder::new(vtree);
+            let builder = sdd::CompressionSddBuilder::new(vtree);
             let mut gkat = Gkat::new(&builder);
             let exp1 = gkat.from_exp(exp1);
             let exp2 = gkat.from_exp(exp2);
