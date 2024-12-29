@@ -6,11 +6,17 @@ mod syntax;
 use clap::{Parser, ValueEnum};
 use parsing::*;
 use rsdd::{
-    builder::{self},
-    repr::{VTree, VarLabel},
+    builder::{self, cache::AllIteTable},
+    repr::{BddPtr, VTree, VarLabel},
 };
 use std::fs;
 use syntax::*;
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum Mode {
+    Bdd,
+    Sdd,
+}
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Kernel {
@@ -20,6 +26,8 @@ enum Kernel {
 
 #[derive(Parser, Debug)]
 struct Args {
+    #[arg(short, long, value_enum, default_value_t = Mode::Bdd)]
+    mode: Mode,
     #[arg(short, long, value_enum, default_value_t = Kernel::K1)]
     kernel: Kernel,
     input: String,
@@ -30,23 +38,45 @@ fn main() {
     let file = fs::read_to_string(args.input).expect("cannot read file");
     let (exp1, exp2, b) = parse(file);
 
-    let order: Vec<VarLabel> = (0..1024).map(|x| VarLabel::new(x)).collect();
-    let vtree = VTree::right_linear(&order);
-    let builder = builder::sdd::CompressionSddBuilder::new(vtree);
-    let mut gkat = Gkat::new(&builder);
-    let exp1 = gkat.from_exp(exp1);
-    let exp2 = gkat.from_exp(exp2);
-
-    let result = match args.kernel {
-        Kernel::K1 => {
-            let mut solver = kernel1::Solver::new();
-            solver.equiv_iter(&mut gkat, &exp1, &exp2)
+    let result = match args.mode {
+        Mode::Bdd => {
+            let builder =
+                builder::bdd::RobddBuilder::<AllIteTable<BddPtr>>::new_with_linear_order(1024);
+            let mut gkat = Gkat::new(&builder);
+            let exp1 = gkat.from_exp(exp1);
+            let exp2 = gkat.from_exp(exp2);
+            match args.kernel {
+                Kernel::K1 => {
+                    let mut solver = kernel1::Solver::new();
+                    solver.equiv_iter(&mut gkat, &exp1, &exp2)
+                }
+                Kernel::K2 => {
+                    let mut solver = kernel2::Solver::new();
+                    let (i, m) = solver.mk_automaton(&mut gkat, &exp1);
+                    let (j, n) = solver.mk_automaton(&mut gkat, &exp2);
+                    solver.equiv_iter(&mut gkat, i, j, &m, &n)
+                }
+            }
         }
-        Kernel::K2 => {
-            let mut solver = kernel2::Solver::new();
-            let (i, m) = solver.mk_automaton(&mut gkat, &exp1);
-            let (j, n) = solver.mk_automaton(&mut gkat, &exp2);
-            solver.equiv_iter(&mut gkat, i, j, &m, &n)
+        Mode::Sdd => {
+            let order: Vec<VarLabel> = (0..1024).map(|x| VarLabel::new(x)).collect();
+            let vtree = VTree::right_linear(&order);
+            let builder = builder::sdd::CompressionSddBuilder::new(vtree);
+            let mut gkat = Gkat::new(&builder);
+            let exp1 = gkat.from_exp(exp1);
+            let exp2 = gkat.from_exp(exp2);
+            match args.kernel {
+                Kernel::K1 => {
+                    let mut solver = kernel1::Solver::new();
+                    solver.equiv_iter(&mut gkat, &exp1, &exp2)
+                }
+                Kernel::K2 => {
+                    let mut solver = kernel2::Solver::new();
+                    let (i, m) = solver.mk_automaton(&mut gkat, &exp1);
+                    let (j, n) = solver.mk_automaton(&mut gkat, &exp2);
+                    solver.equiv_iter(&mut gkat, i, j, &m, &n)
+                }
+            }
         }
     };
 
