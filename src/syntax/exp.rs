@@ -45,9 +45,7 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Gkat<'a, BExp, 
         use Exp_::*;
         match (p1.get(), p2.get()) {
             (Test(b1), Test(b2)) => {
-                let b1 = b1.clone();
-                let b2 = b2.clone();
-                let b3 = self.bexp_builder.and(b1, b2);
+                let b3 = self.bexp_builder.and(*b1, *b2);
                 self.mk_test(b3)
             }
             _ => {
