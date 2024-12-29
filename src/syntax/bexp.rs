@@ -8,11 +8,11 @@ use rsdd::{
 impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Gkat<'a, BExp, Builder> {
     fn mk_name(&mut self, s: String) -> VarLabel {
         match self.name_map.get(&s) {
-            Some(x) => x.clone(),
+            Some(x) => *x,
             None => {
                 self.name_stamp += 1;
                 let x = VarLabel::new(self.name_stamp);
-                self.name_map.insert(s.clone(), x.clone());
+                self.name_map.insert(s, x);
                 x
             }
         }
@@ -32,15 +32,45 @@ impl<'a, BExp: DDNNFPtr<'a>, Builder: BottomUpBuilder<'a, BExp>> Gkat<'a, BExp, 
     }
 
     pub fn mk_or(&mut self, b1: BExp, b2: BExp) -> BExp {
-        self.bexp_builder.or(b1, b2)
+        if b1.is_true() {
+            self.mk_one()
+        } else if b2.is_true() {
+            self.mk_one()
+        } else if b1.is_false() {
+            b2
+        } else if b2.is_false() {
+            b1
+        } else if b1 == b2 {
+            b1
+        } else {
+            self.bexp_builder.or(b1, b2)
+        }
     }
 
     pub fn mk_and(&mut self, b1: BExp, b2: BExp) -> BExp {
-        self.bexp_builder.and(b1, b2)
+        if b1.is_true() {
+            b2
+        } else if b2.is_true() {
+            b1
+        } else if b1.is_false() {
+            self.mk_zero()
+        } else if b2.is_false() {
+            self.mk_zero()
+        } else if b1 == b2 {
+            b1
+        } else {
+            self.bexp_builder.and(b1, b2)
+        }
     }
 
     pub fn mk_not(&mut self, b1: BExp) -> BExp {
-        self.bexp_builder.negate(b1)
+        if b1.is_true() {
+            self.mk_zero()
+        } else if b1.is_false() {
+            self.mk_one()
+        } else {
+            self.bexp_builder.negate(b1)
+        }
     }
 
     pub fn from_bexp(&mut self, raw: parsing::BExp) -> BExp {
