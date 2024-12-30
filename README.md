@@ -14,7 +14,6 @@ The resulting executable can be found at `target/release/rust-gkat`.
 
 ## Usage
 `rust-gkat` offers 2 solver kernels for checking equivalence of boolean expressions.
-Modes and kernels can be combined freely.
 
 - kernel `k1`: symbolic derivative method (default)
 ``` sh
