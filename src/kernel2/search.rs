@@ -8,7 +8,7 @@ impl Solver {
             let nb = b.not();
             result = result.and(&nb)
         }
-        result
+        return result;
     }
 
     pub fn is_dead(&mut self, st: u64, m: &Automaton) -> bool {
