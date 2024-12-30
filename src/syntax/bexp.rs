@@ -1,10 +1,9 @@
 use super::*;
-use crate::parsing;
 use std::{fmt::Debug, hash::Hash, ptr};
 
 pub struct BExp {
-    cudd: *mut DdManager,
-    node: *mut DdNode,
+    pub(super) cudd: *mut DdManager,
+    pub(super) node: *mut DdNode,
 }
 
 impl Drop for BExp {
@@ -86,68 +85,5 @@ impl BExp {
 
     pub fn is_false(&self) -> bool {
         unsafe { self.node == Cudd_ReadLogicZero(self.cudd) }
-    }
-}
-
-impl Gkat {
-    pub fn zero(&mut self) -> BExp {
-        unsafe {
-            let node = Cudd_ReadLogicZero(self.bexp_builder.0);
-            Cudd_Ref(node);
-            BExp {
-                cudd: self.bexp_builder.0,
-                node: node,
-            }
-        }
-    }
-
-    pub fn one(&mut self) -> BExp {
-        unsafe {
-            let node = Cudd_ReadOne(self.bexp_builder.0);
-            Cudd_Ref(node);
-            BExp {
-                cudd: self.bexp_builder.0,
-                node: node,
-            }
-        }
-    }
-
-    pub fn var(&mut self, s: String) -> BExp {
-        if let Some(x) = self.name_map.get(&s) {
-            return x.clone();
-        }
-        let x = unsafe {
-            let node = Cudd_bddNewVar(self.bexp_builder.0);
-            Cudd_Ref(node);
-            BExp {
-                cudd: self.bexp_builder.0,
-                node: node,
-            }
-        };
-        self.name_map.insert(s, x.clone());
-        return x;
-    }
-
-    pub fn from_bexp(&mut self, raw: parsing::BExp) -> BExp {
-        use parsing::BExp::*;
-        match raw {
-            Zero => self.zero(),
-            One => self.one(),
-            PBool(s) => self.var(s),
-            Or(b1, b2) => {
-                let b1 = self.from_bexp(*b1);
-                let b2 = self.from_bexp(*b2);
-                b1.or(&b2)
-            }
-            And(b1, b2) => {
-                let b1 = self.from_bexp(*b1);
-                let b2 = self.from_bexp(*b2);
-                b1.and(&b2)
-            }
-            Not(b) => {
-                let b = self.from_bexp(*b);
-                b.not()
-            }
-        }
     }
 }

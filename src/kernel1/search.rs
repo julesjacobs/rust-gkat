@@ -29,6 +29,6 @@ impl Solver {
             }
         }
         self.dead_states.extend(self.explored.iter().cloned());
-        true
+        return true;
     }
 }

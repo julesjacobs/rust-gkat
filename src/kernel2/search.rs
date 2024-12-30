@@ -30,6 +30,6 @@ impl Solver {
             }
         }
         self.dead_states.extend(self.explored.iter());
-        true
+        return true;
     }
 }
