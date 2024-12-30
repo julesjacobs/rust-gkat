@@ -39,7 +39,6 @@ impl Solver {
                 if !assert2 {
                     return false;
                 }
-                let mut assert3;
                 for (be1, next_exp1, p) in dexp1 {
                     for (be2, next_exp2, q) in &dexp2 {
                         let b1b2 = be1.and(be2);
@@ -51,8 +50,7 @@ impl Solver {
                         } else {
                             let result1 = self.is_dead(gkat, &next_exp1);
                             let result2 = self.is_dead(gkat, &next_exp2);
-                            assert3 = result1 && result2;
-                            if !assert3 {
+                            if !(result1 && result2) {
                                 return false;
                             }
                         }

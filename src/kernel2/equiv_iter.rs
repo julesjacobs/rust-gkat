@@ -39,7 +39,6 @@ impl Solver {
                 if !assert2 {
                     return false;
                 }
-                let mut assert3;
                 for (be1, st1, p) in delta1 {
                     for (be2, st2, q) in delta2 {
                         let b1b2 = be1.and(be2);
@@ -51,8 +50,7 @@ impl Solver {
                         } else {
                             let result1 = self.is_dead(*st1, m);
                             let result2 = self.is_dead(*st2, n);
-                            assert3 = result1 && result2;
-                            if !assert3 {
+                            if !(result1 && result2) {
                                 return false;
                             }
                         }
