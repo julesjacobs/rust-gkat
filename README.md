@@ -1,6 +1,6 @@
 # Symbolic GKAT Equivalence 
 This repository implements Zhang's symbolic
-[GKAT](https://dl.acm.org/doi/10.1145/3371129) equivalence algorithm.
+[GKAT](https://dl.acm.org/doi/10.1145/3371129) equivalence algorithms.
 
 ## Building
 Requires the `cargo` build tool for the [Rust](https://www.rust-lang.org/)
