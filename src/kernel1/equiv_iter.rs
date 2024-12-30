@@ -60,6 +60,6 @@ impl Solver {
                 }
             }
         }
-        true
+        return true;
     }
 }
