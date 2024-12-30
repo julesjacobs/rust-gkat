@@ -2,31 +2,19 @@ use super::*;
 use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
 use lru::LruCache;
-use std::{marker::PhantomData, num::NonZero};
+use std::num::NonZero;
 
-pub struct Solver<A, M, Builder>
-where
-    A: NodeAddress,
-    M: Multiplicity,
-    Builder: DecisionDiagramFactory<A, M>,
-{
+pub struct Solver {
     // search states
-    pub(super) dead_states: HashSet<Exp<BExp<A, M>>>,
-    pub(super) explored: HashSet<Exp<BExp<A, M>>>,
-    pub(super) uf_table: HashMap<Exp<BExp<A, M>>, UnionFindNode<()>>,
+    pub(super) dead_states: HashSet<Exp>,
+    pub(super) explored: HashSet<Exp>,
+    pub(super) uf_table: HashMap<Exp, UnionFindNode<()>>,
     // caching
-    pub(super) eps_cache: LruCache<Exp<BExp<A, M>>, BExp<A, M>>,
-    pub(super) deriv_cache: LruCache<Exp<BExp<A, M>>, Vec<(NodeIndex<A, M>, Exp<BExp<A, M>>, u64)>>,
-    // phantom
-    phantom: PhantomData<Builder>,
+    pub(super) eps_cache: LruCache<Exp, BExp>,
+    pub(super) deriv_cache: LruCache<Exp, Vec<(BExp, Exp, u64)>>,
 }
 
-impl<A, M, Builder> Solver<A, M, Builder>
-where
-    A: NodeAddress,
-    M: Multiplicity,
-    Builder: DecisionDiagramFactory<A, M>,
-{
+impl Solver {
     pub fn new() -> Self {
         Solver {
             // search init
@@ -36,12 +24,10 @@ where
             // caching
             eps_cache: LruCache::new(NonZero::new(1024).unwrap()),
             deriv_cache: LruCache::new(NonZero::new(1024).unwrap()),
-            // builder
-            phantom: PhantomData,
         }
     }
 
-    pub fn get_uf(&mut self, exp: &Exp<BExp<A, M>>) -> UnionFindNode<()> {
+    pub fn get_uf(&mut self, exp: &Exp) -> UnionFindNode<()> {
         match self.uf_table.get(exp) {
             Some(node) => node.clone(),
             None => {

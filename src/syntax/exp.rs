@@ -7,49 +7,44 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-pub type Exp<BExp> = HConsed<Exp_<BExp>>;
+pub type Exp = HConsed<Exp_>;
 
 #[derive(Debug, Hash, Clone, PartialEq, Eq)]
-pub enum Exp_<BExp> {
+pub enum Exp_ {
     Act(u64),
-    Seq(Exp<BExp>, Exp<BExp>),
-    Ifte(BExp, Exp<BExp>, Exp<BExp>),
+    Seq(Exp, Exp),
+    Ifte(BExp, Exp, Exp),
     Test(BExp),
-    While(BExp, Exp<BExp>),
+    While(BExp, Exp),
 }
 
-impl<A, M, Builder> Gkat<A, M, Builder>
-where
-    A: NodeAddress,
-    M: Multiplicity,
-    Builder: DecisionDiagramFactory<A, M>,
-{
-    pub fn mk_act(&mut self, s: String) -> Exp<BExp<A, M>> {
+impl Gkat {
+    pub fn mk_act(&mut self, s: String) -> Exp {
         let mut hasher = AHasher::default();
         s.hash(&mut hasher);
         let a = hasher.finish();
         self.exp_hcons.mk(Exp_::Act(a))
     }
 
-    pub fn mk_skip(&mut self) -> Exp<BExp<A, M>> {
-        let b = self.mk_one();
+    pub fn mk_skip(&mut self) -> Exp {
+        let b = self.one();
         self.mk_test(b)
     }
 
-    pub fn mk_fail(&mut self) -> Exp<BExp<A, M>> {
-        let b = self.mk_zero();
+    pub fn mk_fail(&mut self) -> Exp {
+        let b = self.zero();
         self.mk_test(b)
     }
 
-    pub fn mk_test(&mut self, b: BExp<A, M>) -> Exp<BExp<A, M>> {
+    pub fn mk_test(&mut self, b: BExp) -> Exp {
         self.exp_hcons.mk(Exp_::Test(b))
     }
 
-    pub fn mk_seq(&mut self, p1: Exp<BExp<A, M>>, p2: Exp<BExp<A, M>>) -> Exp<BExp<A, M>> {
+    pub fn mk_seq(&mut self, p1: Exp, p2: Exp) -> Exp {
         use Exp_::*;
         match (p1.get(), p2.get()) {
             (Test(b1), Test(b2)) => {
-                let b3 = self.mk_and(*b1, *b2);
+                let b3 = b1.and(b2);
                 self.mk_test(b3)
             }
             _ => {
@@ -68,18 +63,13 @@ where
         }
     }
 
-    pub fn mk_ifte(
-        &mut self,
-        b: BExp<A, M>,
-        p1: Exp<BExp<A, M>>,
-        p2: Exp<BExp<A, M>>,
-    ) -> Exp<BExp<A, M>> {
+    pub fn mk_ifte(&mut self, b: BExp, p1: Exp, p2: Exp) -> Exp {
         if b.is_true() {
             p1
         } else if b.is_false() {
             p2
         } else if p1 == self.mk_fail() {
-            let nb = self.mk_not(b);
+            let nb = b.not();
             let p1 = self.mk_test(nb);
             self.mk_seq(p1, p2)
         } else if p2 == self.mk_fail() {
@@ -90,11 +80,11 @@ where
         }
     }
 
-    pub fn mk_while(&mut self, b: BExp<A, M>, p: Exp<BExp<A, M>>) -> Exp<BExp<A, M>> {
+    pub fn mk_while(&mut self, b: BExp, p: Exp) -> Exp {
         self.exp_hcons.mk(Exp_::While(b, p))
     }
 
-    pub fn from_exp(&mut self, raw: parsing::Exp) -> Exp<BExp<A, M>> {
+    pub fn from_exp(&mut self, raw: parsing::Exp) -> Exp {
         use parsing::Exp::*;
         match raw {
             Act(s) => self.mk_act(s),

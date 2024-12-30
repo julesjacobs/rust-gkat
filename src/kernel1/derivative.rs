@@ -1,43 +1,34 @@
 use super::*;
 
-impl<A, M, Builder> Solver<A, M, Builder>
-where
-    A: NodeAddress,
-    M: Multiplicity,
-    Builder: DecisionDiagramFactory<A, M>,
-{
-    pub fn epsilon(&mut self, gkat: &mut Gkat<A, M, Builder>, m: &Exp<BExp<A, M>>) -> BExp<A, M> {
+impl Solver {
+    pub fn epsilon(&mut self, gkat: &mut Gkat, m: &Exp) -> BExp {
         if let Some(eps) = self.eps_cache.get(m) {
-            return *eps;
+            return eps.clone();
         }
         use Exp_::*;
         let eps = match m.get() {
-            Act(_) => gkat.mk_zero(),
+            Act(_) => gkat.zero(),
             Seq(p1, p2) => {
                 let b1 = self.epsilon(gkat, p1);
                 let b2 = self.epsilon(gkat, p2);
-                gkat.mk_and(b1, b2)
+                b1.and(&b2)
             }
             Ifte(b, p1, p2) => {
                 let b1 = self.epsilon(gkat, p1);
                 let b2 = self.epsilon(gkat, p2);
-                let b_b1 = gkat.mk_and(*b, b1);
-                let nb = gkat.mk_not(*b);
-                let nb_b2 = gkat.mk_and(nb, b2);
-                gkat.mk_or(b_b1, nb_b2)
+                let b_b1 = b.and(&b1);
+                let nb = b.not();
+                let nb_b2 = nb.and(&b2);
+                b_b1.or(&nb_b2)
             }
-            Test(b) => *b,
-            While(b, _) => gkat.mk_not(*b),
+            Test(b) => b.clone(),
+            While(b, _) => b.not(),
         };
-        self.eps_cache.push(m.clone(), eps);
+        self.eps_cache.push(m.clone(), eps.clone());
         return eps;
     }
 
-    pub fn derivative(
-        &mut self,
-        gkat: &mut Gkat<A, M, Builder>,
-        exp: &Exp<BExp<A, M>>,
-    ) -> Vec<(BExp<A, M>, Exp<BExp<A, M>>, u64)> {
+    pub fn derivative(&mut self, gkat: &mut Gkat, exp: &Exp) -> Vec<(BExp, Exp, u64)> {
         if let Some(deriv) = self.deriv_cache.get(exp) {
             return deriv.clone();
         }
@@ -45,16 +36,16 @@ where
         let deriv = match exp.get() {
             Test(_) => vec![],
             Act(n) => {
-                let one_exp = gkat.mk_one();
-                let e = gkat.mk_test(one_exp);
+                let one_exp = gkat.one();
+                let e = gkat.mk_test(one_exp.clone());
                 vec![(one_exp, e, *n)]
             }
             Ifte(b, p1, p2) => {
-                let nb = gkat.mk_not(*b);
+                let nb = b.not();
                 let dexp1 = self.derivative(gkat, p1);
                 let dexp2 = self.derivative(gkat, p2);
-                let mut dexp: Vec<_> = GuardIterator::new(gkat, *b, dexp1.iter()).collect();
-                let dexp_ext = GuardIterator::new(gkat, nb, dexp2.iter());
+                let mut dexp: Vec<_> = GuardIterator::new(b, dexp1.iter()).collect();
+                let dexp_ext = GuardIterator::new(&nb, dexp2.iter());
                 dexp.extend(dexp_ext);
                 dexp
             }
@@ -66,7 +57,7 @@ where
                     let seq_exp = gkat.mk_seq(e.clone(), p2.clone());
                     *e = seq_exp
                 }
-                let dexp_ext = GuardIterator::new(gkat, eps, dexp2.iter());
+                let dexp_ext = GuardIterator::new(&eps, dexp2.iter());
                 dexp.extend(dexp_ext);
                 dexp
             }
@@ -74,7 +65,7 @@ where
                 let dexp = self.derivative(gkat, p);
                 dexp.into_iter()
                     .filter_map(|(b, e, a)| {
-                        let guard = gkat.mk_and(b, *be);
+                        let guard = b.and(be);
                         if guard.is_false() {
                             None
                         } else {

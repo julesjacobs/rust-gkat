@@ -1,27 +1,17 @@
 use super::*;
 
-impl<A, M, Builder> Solver<A, M, Builder>
-where
-    A: NodeAddress,
-    M: Multiplicity,
-    Builder: DecisionDiagramFactory<A, M>,
-{
-    pub fn reject(
-        &mut self,
-        gkat: &mut Gkat<A, M, Builder>,
-        st: u64,
-        m: &Automaton<BExp<A, M>>,
-    ) -> BExp<A, M> {
+impl Solver {
+    pub fn reject(&mut self, st: u64, m: &Automaton) -> BExp {
         let eps = m.eps_hat.get(&st).unwrap();
-        let mut result = gkat.mk_not(*eps);
+        let mut result = eps.not();
         for (b, _, _) in m.delta_hat.get(&st).unwrap() {
-            let nb = gkat.mk_not(*b);
-            result = gkat.mk_and(result, nb)
+            let nb = b.not();
+            result = result.and(&nb)
         }
         result
     }
 
-    pub fn is_dead(&mut self, st: u64, m: &Automaton<BExp<A, M>>) -> bool {
+    pub fn is_dead(&mut self, st: u64, m: &Automaton) -> bool {
         let mut stack = Vec::new();
         stack.push(st);
         self.explored.clear();

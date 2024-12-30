@@ -1,35 +1,29 @@
 use super::*;
 use ahash::HashMap;
+use cudd::{Cudd_Init, CUDD_CACHE_SLOTS, CUDD_UNIQUE_SLOTS};
 use hashconsing::HConsign;
 
-pub struct Gkat<A, M, Builder>
-where
-    A: NodeAddress,
-    M: Multiplicity,
-    Builder: DecisionDiagramFactory<A, M>,
-{
-    // bexp states
-    pub(super) name_stamp: u64,
-    pub(super) name_map: HashMap<String, VariableIndex>,
-    pub(super) bexp_builder: Builder,
-    // exp states
-    pub(super) exp_hcons: HConsign<Exp_<BExp<A, M>>>,
+pub(super) struct Builder(pub *mut DdManager);
+
+impl Drop for Builder {
+    fn drop(&mut self) {
+        unsafe { Cudd_Quit(self.0) };
+    }
 }
 
-impl<A, M, Builder> Gkat<A, M, Builder>
-where
-    A: NodeAddress,
-    M: Multiplicity,
-    Builder: DecisionDiagramFactory<A, M>,
-{
-    pub fn new(builder: Builder) -> Self {
+pub struct Gkat {
+    pub(super) name_map: HashMap<String, BExp>,
+    pub(super) exp_hcons: HConsign<Exp_>,
+    pub(super) bexp_builder: Builder,
+}
+
+impl Gkat {
+    pub fn new() -> Self {
+        let builder = unsafe { Cudd_Init(0, 0, CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS, 0) };
         Gkat {
-            // bexp init
-            name_stamp: 0,
             name_map: HashMap::default(),
-            bexp_builder: builder,
-            // exp init
             exp_hcons: HConsign::empty(),
+            bexp_builder: Builder(builder),
         }
     }
 }

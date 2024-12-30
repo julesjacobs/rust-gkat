@@ -1,5 +1,4 @@
 mod automaton;
-mod equiv;
 mod equiv_iter;
 mod guard;
 mod search;
@@ -9,4 +8,3 @@ use crate::syntax::*;
 pub use automaton::*;
 use guard::*;
 pub use solver::*;
-use xdd::*;

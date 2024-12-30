@@ -5,17 +5,16 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.dev]
-overflow-checks = false
-opt-level = 3
+overflow-checks = true
+debug = true
 
 [profile.test]
-overflow-checks = false
-opt-level = 3
+overflow-checks = true
 debug = true
 
 [profile.release]
 overflow-checks = false
-opt-level = 3
+opt-level = 2
 debug = true
 
 [build-dependencies]
@@ -26,7 +25,7 @@ recursive = "0.1.1"
 ahash = "0.8.11"
 hashconsing = "1.6.0"
 disjoint-sets = "0.4.2"
-xdd = "0.1.0"
+cudd-sys = "1.0.0"
 lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
 clap = { version = "4.5.18", features = ["derive"] }
 lru = "0.12.5"

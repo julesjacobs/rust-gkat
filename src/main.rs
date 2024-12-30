@@ -7,7 +7,6 @@ use clap::{Parser, ValueEnum};
 use parsing::*;
 use std::fs;
 use syntax::*;
-use xdd::*;
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Kernel {
@@ -27,8 +26,7 @@ fn main() {
     let file = fs::read_to_string(args.input).expect("cannot read file");
     let (exp1, exp2, b) = parse(file);
 
-    let builder = BDDFactory::<u32, NoMultiplicity>::new(1024);
-    let mut gkat = Gkat::new(builder);
+    let mut gkat = Gkat::new();
     let exp1 = gkat.from_exp(exp1);
     let exp2 = gkat.from_exp(exp2);
 
@@ -41,7 +39,7 @@ fn main() {
             let mut solver = kernel2::Solver::new();
             let (i, m) = solver.mk_automaton(&mut gkat, &exp1);
             let (j, n) = solver.mk_automaton(&mut gkat, &exp2);
-            solver.equiv_iter(&mut gkat, i, j, &m, &n)
+            solver.equiv_iter(i, j, &m, &n)
         }
     };
 
