@@ -4,9 +4,13 @@ mod parsing;
 mod syntax;
 
 use clap::{Parser, ValueEnum};
+use mimalloc::MiMalloc;
 use parsing::*;
 use std::fs;
 use syntax::*;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Kernel {
