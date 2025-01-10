@@ -59,7 +59,7 @@ binary form as `(seq A (seq B C))`.
 
 ## Performance and Evaluation
 Currently, we have tested `rust-gkat` on all large GKAT pairs contained in
-`dataset.zip`. One can also use `make k1` or `make k2` to run `rust-gkat` on
+`dataset0.zip`. One can also use `make k1` or `make k2` to run `rust-gkat` on
 all examples in the dataset.
 
 ### Symbolic Derivative Method
@@ -92,7 +92,7 @@ equiv_result   = true
 
 ### Symbolic Thompson's Construction
 The algorithm for symbolic thompson's construction performs much better than
-the derivative method due to algorithmic improvements. Examples provided in `dataset.zip`
+the derivative method due to algorithmic improvements. Examples provided in `dataset0.zip`
 are no longer useful as runtime benchmarks as each test solves in `0.00s`.
 ```
 ➞  /usr/bin/time -l ./target/release/rust-gkat -k k2 dataset/exp9000.txt
@@ -118,12 +118,13 @@ equiv_result   = true
              5751096  peak memory footprint
 ```
 
-We provide a dataset `dataset_big.zip` containing even larger examples with expression size
-of 1,000,000. These examples are far more challenging to solve. Kernel1 (derivative method) 
-will not be able to solve some of these problems in a timely manner. Use `make big` to run 
-`rust-gkat` on all big examples.
+We provide datasets `dataset1.zip` and `dataset2.zip` containing even larger
+examples with expression size of up to 1,000,000. These examples are far more
+challenging to solve. Kernel1 (derivative method) will not be able to solve some
+of these problems in a timely manner. Use `make d1` to run `rust-gkat` on all
+examples in `dataset1` and `make d2` to run on `dataset2`.
 ```
-➞  /usr/bin/time -l ./target/release/rust-gkat -k k2 dataset_big/big02.txt
+➞  /usr/bin/time -l ./target/release/rust-gkat -k k2 dataset1/big02.txt
 equiv_expected = true
 equiv_result   = true
         4.53 real         4.30 user         0.21 sys

@@ -1,19 +1,24 @@
-INPUT := $(shell find dataset -name '*.txt')
-INPUT_BIG := $(shell find dataset_big -name '*.txt')
-K1 := $(subst dataset/,k1/,$(INPUT))
-K2 := $(subst dataset/,k2/,$(INPUT))
-BIG := $(subst dataset_big/,big/,$(INPUT_BIG))
+INPUT0 := $(shell find dataset0 -name '*.txt')
+INPUT1 := $(shell find dataset1 -name '*.txt')
+INPUT2 := $(shell find dataset2 -name '*.txt')
+K1 := $(subst dataset0/,k1/,$(INPUT0))
+K2 := $(subst dataset0/,k2/,$(INPUT0))
+D1 := $(subst dataset1/,d1/,$(INPUT1))
+D2 := $(subst dataset2/,d2/,$(INPUT2))
 
-
-k1/%.txt: dataset/%.txt 
+k1/%.txt: dataset0/%.txt 
 	time ./target/release/rust-gkat -k k1 $<
 
-k2/%.txt: dataset/%.txt 
+k2/%.txt: dataset0/%.txt 
 	time ./target/release/rust-gkat -k k2 $<
 
-big/%.txt: dataset_big/%.txt
+d1/%.txt: dataset1/%.txt
+	/usr/bin/time -l ./target/release/rust-gkat -k k2 $<
+
+d2/%.txt: dataset2/%.txt
 	/usr/bin/time -l ./target/release/rust-gkat -k k2 $<
 
 k1: $(K1)
 k2: $(K2)
-big: $(BIG)
+d1: $(D1)
+d2: $(D2)
