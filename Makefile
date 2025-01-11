@@ -7,16 +7,16 @@ D1 := $(subst dataset1/,d1/,$(INPUT1))
 D2 := $(subst dataset2/,d2/,$(INPUT2))
 
 k1/%.txt: dataset0/%.txt 
-	/usr/bin/time -l ./target/release/rust-gkat -k k1 $<
+	timeout 5m ./target/release/rust-gkat -k k1 $<
 
 k2/%.txt: dataset0/%.txt 
-	/usr/bin/time -l ./target/release/rust-gkat -k k2 $<
+	timeout 5m ./target/release/rust-gkat -k k2 $<
 
 d1/%.txt: dataset1/%.txt
-	/usr/bin/time -l ./target/release/rust-gkat -k k2 $<
+	timeout 5m ./target/release/rust-gkat -k k2 $<
 
 d2/%.txt: dataset2/%.txt
-	/usr/bin/time -l ./target/release/rust-gkat -k k2 $<
+	timeout 5m ./target/release/rust-gkat -k k2 $<
 
 k1: $(K1)
 k2: $(K2)
