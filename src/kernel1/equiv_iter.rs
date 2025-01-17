@@ -19,8 +19,8 @@ impl Solver {
                 let eps2 = self.epsilon(gkat, &exp2);
                 let dexp1 = self.derivative(gkat, &exp1);
                 let dexp2 = self.derivative(gkat, &exp2);
-                let reject1 = self.reject(gkat, &exp1);
-                let reject2 = self.reject(gkat, &exp2);
+                let reject1 = self.reject(&eps1, &dexp1);
+                let reject2 = self.reject(&eps2, &dexp2);
 
                 if !(eps1 == eps2) {
                     return false;

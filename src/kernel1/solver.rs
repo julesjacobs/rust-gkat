@@ -60,9 +60,7 @@ impl Solver {
         self.deriv_cache.push(exp, deriv);
     }
 
-    pub fn reject(&mut self, gkat: &mut Gkat, exp: &Exp) -> BExp {
-        let dexp = self.derivative(gkat, exp);
-        let eps = self.epsilon(gkat, exp);
+    pub fn reject(&mut self, eps: &BExp, dexp: &Deriv) -> BExp {
         dexp.iter().fold(eps.not(), |acc, (b, _, _)| {
             let nb = b.not();
             nb.and(&acc)
