@@ -1,13 +1,14 @@
+use super::*;
 use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
 
 pub struct Solver {
     // automaton states
-    pub(super) state_stamp: u64,
+    state_stamp: u64,
     // search states
-    pub(super) dead_states: HashSet<u64>,
-    pub(super) explored: HashSet<u64>,
-    pub(super) uf_table: HashMap<u64, UnionFindNode<()>>,
+    dead_states: HashSet<u64>,
+    explored: HashSet<u64>,
+    uf_table: HashMap<u64, UnionFindNode<()>>,
 }
 
 impl Solver {
@@ -37,5 +38,42 @@ impl Solver {
                 node
             }
         }
+    }
+
+    pub fn reject(&mut self, st: u64, m: &Automaton) -> BExp {
+        let eps = m.eps_hat.get(&st).unwrap();
+        let mut result = eps.not();
+        for (b, _, _) in m.delta_hat.get(&st).unwrap() {
+            let nb = b.not();
+            result = result.and(&nb)
+        }
+        return result;
+    }
+
+    #[inline]
+    pub fn known_dead(&self, st: &u64) -> bool {
+        self.dead_states.contains(st)
+    }
+
+    pub fn is_dead(&mut self, st: u64, m: &Automaton) -> bool {
+        let mut stack = Vec::new();
+        stack.push(st);
+        self.explored.clear();
+        while let Some(st) = stack.pop() {
+            if self.known_dead(&st) || self.explored.contains(&st) {
+                continue;
+            }
+            self.explored.insert(st);
+            let eps = m.eps_hat.get(&st).unwrap();
+            if eps.is_false() {
+                for (_, st, _) in m.delta_hat.get(&st).unwrap() {
+                    stack.push(*st);
+                }
+            } else {
+                return false;
+            }
+        }
+        self.dead_states.extend(self.explored.iter());
+        return true;
     }
 }

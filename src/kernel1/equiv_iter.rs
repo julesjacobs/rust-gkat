@@ -10,9 +10,9 @@ impl Solver {
 
             if exp1_uf.equiv(&exp2_uf) {
                 continue;
-            } else if self.dead_states.contains(&exp1) && self.is_dead(gkat, &exp2) {
+            } else if self.known_dead(&exp1) && self.is_dead(gkat, &exp2) {
                 continue;
-            } else if self.dead_states.contains(&exp2) && self.is_dead(gkat, &exp1) {
+            } else if self.known_dead(&exp2) && self.is_dead(gkat, &exp1) {
                 continue;
             } else {
                 let eps1 = self.epsilon(gkat, &exp1);

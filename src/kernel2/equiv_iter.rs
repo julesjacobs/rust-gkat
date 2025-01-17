@@ -10,9 +10,9 @@ impl Solver {
 
             if exp1_uf.equiv(&exp2_uf) {
                 continue;
-            } else if self.dead_states.contains(&i) && self.is_dead(j, n) {
+            } else if self.known_dead(&i) && self.is_dead(j, n) {
                 continue;
-            } else if self.dead_states.contains(&j) && self.is_dead(i, m) {
+            } else if self.known_dead(&j) && self.is_dead(i, m) {
                 continue;
             } else {
                 let eps1 = m.eps_hat.get(&i).unwrap();

@@ -2,7 +2,7 @@ use super::*;
 
 impl Solver {
     pub fn epsilon(&mut self, gkat: &mut Gkat, m: &Exp) -> BExp {
-        if let Some(eps) = self.eps_cache.get(m) {
+        if let Some(eps) = self.get_eps(m) {
             return eps.clone();
         }
         use Exp_::*;
@@ -24,12 +24,12 @@ impl Solver {
             Test(b) => b.clone(),
             While(b, _) => b.not(),
         };
-        self.eps_cache.push(m.clone(), eps.clone());
+        self.set_eps(m.clone(), eps.clone());
         return eps;
     }
 
-    pub fn derivative(&mut self, gkat: &mut Gkat, exp: &Exp) -> Vec<(BExp, Exp, u64)> {
-        if let Some(deriv) = self.deriv_cache.get(exp) {
+    pub fn derivative(&mut self, gkat: &mut Gkat, exp: &Exp) -> Deriv {
+        if let Some(deriv) = self.get_deriv(exp) {
             return deriv.clone();
         }
         use Exp_::*;
@@ -76,7 +76,7 @@ impl Solver {
                     .collect()
             }
         };
-        self.deriv_cache.push(exp.clone(), deriv.clone());
+        self.set_deriv(exp.clone(), deriv.clone());
         return deriv;
     }
 }
