@@ -66,7 +66,11 @@ impl Solver {
             self.explored.insert(st);
             let eps = m.eps_hat.get(&st).unwrap();
             if eps.is_false() {
-                for (_, st, _) in m.delta_hat.get(&st).unwrap() {
+                for (b, st, _) in m.delta_hat.get(&st).unwrap() {
+                    // check is not strictly needed due to eager-pruning
+                    if b.is_false() {
+                        continue;
+                    }
                     stack.push(*st);
                 }
             } else {

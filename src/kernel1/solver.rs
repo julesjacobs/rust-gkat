@@ -86,6 +86,7 @@ impl Solver {
             let eps = self.epsilon(gkat, &exp);
             if eps.is_false() {
                 for (b, e, _) in self.derivative(gkat, &exp) {
+                    // check is not strictly needed due to eager-pruning
                     if b.is_false() {
                         continue;
                     }
