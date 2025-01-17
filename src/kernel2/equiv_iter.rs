@@ -2,8 +2,7 @@ use super::*;
 
 impl Solver {
     pub fn equiv_iter(&mut self, i: u64, j: u64, m: &Automaton, n: &Automaton) -> bool {
-        let mut stack = Vec::new();
-        stack.push((i, j));
+        let mut stack = vec![(i, j)];
         while let Some((i, j)) = stack.pop() {
             let mut exp1_uf = self.get_uf(i);
             let mut exp2_uf = self.get_uf(j);
