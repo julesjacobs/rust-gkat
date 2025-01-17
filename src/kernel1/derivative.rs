@@ -29,7 +29,7 @@ impl Solver {
     }
 
     pub fn derivative(&mut self, gkat: &mut Gkat, exp: &Exp) -> Deriv {
-        if let Some(deriv) = self.get_deriv(exp) {
+        if let Some(deriv) = self.get_drv(exp) {
             return deriv.clone();
         }
         use Exp_::*;
@@ -76,7 +76,7 @@ impl Solver {
                     .collect()
             }
         };
-        self.set_deriv(exp.clone(), deriv.clone());
+        self.set_drv(exp.clone(), deriv.clone());
         return deriv;
     }
 }

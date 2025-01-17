@@ -13,7 +13,7 @@ pub struct Solver {
     uf_table: HashMap<Exp, UnionFindNode<()>>,
     // caching
     eps_cache: LruCache<Exp, BExp>,
-    deriv_cache: LruCache<Exp, Deriv>,
+    drv_cache: LruCache<Exp, Deriv>,
 }
 
 impl Solver {
@@ -25,7 +25,7 @@ impl Solver {
             uf_table: HashMap::default(),
             // caching
             eps_cache: LruCache::new(NonZero::new(1024).unwrap()),
-            deriv_cache: LruCache::new(NonZero::new(1024).unwrap()),
+            drv_cache: LruCache::new(NonZero::new(1024).unwrap()),
         }
     }
 
@@ -51,13 +51,13 @@ impl Solver {
     }
 
     #[inline]
-    pub fn get_deriv(&mut self, exp: &Exp) -> Option<&Deriv> {
-        self.deriv_cache.get(exp)
+    pub fn get_drv(&mut self, exp: &Exp) -> Option<&Deriv> {
+        self.drv_cache.get(exp)
     }
 
     #[inline]
-    pub fn set_deriv(&mut self, exp: Exp, deriv: Deriv) {
-        self.deriv_cache.push(exp, deriv);
+    pub fn set_drv(&mut self, exp: Exp, deriv: Deriv) {
+        self.drv_cache.push(exp, deriv);
     }
 
     pub fn reject(&mut self, eps: &BExp, dexp: &Deriv) -> BExp {
