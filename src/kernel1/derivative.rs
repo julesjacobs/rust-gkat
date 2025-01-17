@@ -1,4 +1,5 @@
 use super::*;
+use recursive::recursive;
 
 impl Solver {
     pub fn epsilon(&mut self, gkat: &mut Gkat, m: &Exp) -> BExp {
@@ -28,6 +29,7 @@ impl Solver {
         return eps;
     }
 
+    #[recursive]
     pub fn derivative(&mut self, gkat: &mut Gkat, exp: &Exp) -> Deriv {
         if let Some(deriv) = self.get_drv(exp) {
             return deriv.clone();

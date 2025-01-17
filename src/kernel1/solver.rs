@@ -1,8 +1,6 @@
 use super::*;
 use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
-use lru::LruCache;
-use std::num::NonZero;
 
 pub type Deriv = Vec<(BExp, Exp, u64)>;
 
@@ -12,8 +10,8 @@ pub struct Solver {
     explored: HashSet<Exp>,
     uf_table: HashMap<Exp, UnionFindNode<()>>,
     // caching
-    eps_cache: LruCache<Exp, BExp>,
-    drv_cache: LruCache<Exp, Deriv>,
+    eps_cache: HashMap<Exp, BExp>,
+    drv_cache: HashMap<Exp, Deriv>,
 }
 
 impl Solver {
@@ -24,8 +22,8 @@ impl Solver {
             explored: HashSet::default(),
             uf_table: HashMap::default(),
             // caching
-            eps_cache: LruCache::new(NonZero::new(1024).unwrap()),
-            drv_cache: LruCache::new(NonZero::new(1024).unwrap()),
+            eps_cache: HashMap::default(),
+            drv_cache: HashMap::default(),
         }
     }
 
@@ -47,7 +45,7 @@ impl Solver {
 
     #[inline]
     pub fn set_eps(&mut self, exp: Exp, eps: BExp) {
-        self.eps_cache.push(exp, eps);
+        self.eps_cache.insert(exp, eps);
     }
 
     #[inline]
@@ -57,7 +55,7 @@ impl Solver {
 
     #[inline]
     pub fn set_drv(&mut self, exp: Exp, deriv: Deriv) {
-        self.drv_cache.push(exp, deriv);
+        self.drv_cache.insert(exp, deriv);
     }
 
     pub fn reject(&mut self, eps: &BExp, dexp: &Deriv) -> BExp {
