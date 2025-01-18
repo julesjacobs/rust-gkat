@@ -1,5 +1,5 @@
 # Symbolic GKAT Equivalence 
-This repository implements Zhang's symbolic
+This repository implements symbolic
 [GKAT](https://dl.acm.org/doi/10.1145/3371129) equivalence algorithms.
 
 ## Building
@@ -54,95 +54,37 @@ Sample from `input/test10.txt`:
 (equiv 1)
 ```
 
-For n-ary syntax such `(seq A B C)`, it is parsed right-associatively into
+For n-ary syntax such as `(seq A B C)`, it is parsed right-associatively into
 binary form as `(seq A (seq B C))`.
 
 ## Performance and Evaluation
-Currently, we have tested `rust-gkat` on all large GKAT pairs contained in
-`dataset0.zip`. One can also use `make k1` or `make k2` to run `rust-gkat` on
-all examples in the dataset.
+### Benchmarks
+We provide a set of benchmarks for evaluating the performance of `rust-gkat`.
+These benchmarks follow a simple naming scheme describing the expression pairs
+inside. For example, the benchmark `e250b5p10rd` contains expressions which have
+approximately 250 primitive actions (`e250`), a maximum boolean expression
+size of 5 (`b5`), 10 possible boolean variables (`p10`) and are completely
+random (`rd`). Benchmarks with the suffix `eq` have expression pairs which are
+known to be equivalent. 
 
-### Symbolic Derivative Method
-Even for difficult examples such as `exp9000.txt`, we achieve a very competitive
-runtime of `0.04s` and peak memory consumption of `15MB` with the symbolic derivative 
-method.
-```
-➞  /usr/bin/time -l ./target/release/rust-gkat -k k1 dataset/exp9000.txt
-equiv_expected = true
-equiv_result   = true
-        0.04 real         0.04 user         0.00 sys
-            14532608  maximum resident set size
-                   0  average shared memory size
-                   0  average unshared data size
-                   0  average unshared stack size
-                1004  page reclaims
-                   3  page faults
-                   0  swaps
-                   0  block input operations
-                   0  block output operations
-                   0  messages sent
-                   0  messages received
-                   0  signals received
-                   0  voluntary context switches
-                  19  involuntary context switches
-           626808277  instructions retired
-           123665227  cycles elapsed
-            13386016  peak memory footprint
-```
+One can use `make [dataset] kernel=[k1|k2]` to run `rust-gkat` on a particular
+dataset. For example, `make e250b5p10rd kernel=k1` runs `rust-gkat` on all
+expression pairs contained in dataset `e250b5p10rd` using kernel `k1`.
 
-### Symbolic Thompson's Construction
-The algorithm for symbolic thompson's construction performs much better than
-the derivative method due to algorithmic improvements. Examples provided in `dataset0.zip`
-are no longer useful as runtime benchmarks as each test solves in `0.00s`.
-```
-➞  /usr/bin/time -l ./target/release/rust-gkat -k k2 dataset/exp9000.txt
-equiv_expected = true
-equiv_result   = true
-        0.00 real         0.00 user         0.00 sys
-             6979584  maximum resident set size
-                   0  average shared memory size
-                   0  average unshared data size
-                   0  average unshared stack size
-                 557  page reclaims
-                   3  page faults
-                   0  swaps
-                   0  block input operations
-                   0  block output operations
-                   0  messages sent
-                   0  messages received
-                   0  signals received
-                   0  voluntary context switches
-                   3  involuntary context switches
-            49674701  instructions retired
-            14603881  cycles elapsed
-             5751096  peak memory footprint
-```
+### Results
+We evaluate the performance of `rust-gkat` in terms of time and memory usage. We
+also compare `rust-gkat` with a modified version of
+[SymKAT](https://perso.ens-lyon.fr/damien.pous/symbolickat/) (sk) that allows
+for checking larger expressions. The following table lists the total time and
+peak memory used for each benchmark.
 
-We provide datasets `dataset1.zip` and `dataset2.zip` containing even larger
-examples with expression size of up to 1,000,000. These examples are far more
-challenging to solve. Kernel1 (derivative method) will not be able to solve some
-of these problems in a timely manner. Use `make d1` to run `rust-gkat` on all
-examples in `dataset1` and `make d2` to run on `dataset2`.
-```
-➞  /usr/bin/time -l ./target/release/rust-gkat -k k2 dataset1/big02.txt
-equiv_expected = true
-equiv_result   = true
-        4.53 real         4.30 user         0.21 sys
-          1926316032  maximum resident set size
-                   0  average shared memory size
-                   0  average unshared data size
-                   0  average unshared stack size
-              139711  page reclaims
-                   3  page faults
-                   0  swaps
-                   0  block input operations
-                   0  block output operations
-                   0  messages sent
-                   0  messages received
-                   0  signals received
-                   0  voluntary context switches
-                 771  involuntary context switches
-         53156213051  instructions retired
-         19673676055  cycles elapsed
-          1564968856  peak memory footprint
-```
+| Dataset        | Time (k1) | Time (k2) | Time (sk) | Memory (k1) | Memory (k2) | Memory (sk) |
+| -------------- | --------- | --------- | --------- | ----------- | ----------- | ----------- |
+| E250B5P10RD    | 0.19s     | 0.18s     | 5.82s     | 15.36MB     | 14.76MB     | 114.06MB    |
+| E250B5P10EQ    | 0.21s     | 0.18s     | 2.83s     | 15.56MB     | 14.95MB     | 100.48MB    |
+| E500B5P50RD    | 0.23s     | 0.22s     | 37.28s    | 16.26MB     | 15.49MB     | 524.89MB    |
+| E500B5P50EQ    | 0.26s     | 0.21s     | 14.06s    | 17.97MB     | 15.54MB     | 546.914MB   |
+| E1000B10P100RD | 0.31s     | 0.37s     | TIMEOUT   | 18.21MB     | 21.41MB     | N/A         |
+| E1000B10P100EQ | 0.37s     | 0.28s     | 77.83s    | 20.41MB     | 17.66MB     | 5822.66MB   |
+| E2000B20P200RD | 1.50s     | 2.75s     | TIMEOUT   | 239.71MB    | 283.45MB    | N/A         |
+| E2000B20P200EQ | 48.16s    | 46.45s    | TIMEOUT   | 632.02MB    | 638.00MB    | N/A         |
