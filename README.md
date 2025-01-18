@@ -87,4 +87,4 @@ peak memory used for each benchmark.
 | E1000B10P100RD | 0.31s     | 0.37s     | TIMEOUT   | 18.21MB     | 21.41MB     | N/A         |
 | E1000B10P100EQ | 0.37s     | 0.28s     | 77.83s    | 20.41MB     | 17.66MB     | 5822.66MB   |
 | E2000B20P200RD | 1.50s     | 2.75s     | TIMEOUT   | 239.71MB    | 283.45MB    | N/A         |
-| E2000B20P200EQ | 48.16s    | 46.45s    | TIMEOUT   | 632.02MB    | 638.00MB    | N/A         |
+| E2000B20P200EQ | 3.34s     | 3.03s     | TIMEOUT   | 107.92MB    | 102.46MB    | N/A         |
