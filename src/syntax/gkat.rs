@@ -29,7 +29,7 @@ impl Builder {
             Z3_set_param_value(cfg, c"well_sorted_check".as_ptr(), c"false".as_ptr());
             let ctx = Z3_mk_context(cfg);
             let srt = Z3_mk_bool_sort(ctx);
-            let solver = Z3_mk_solver(ctx);
+            let solver = Z3_mk_simple_solver(ctx);
             Z3_solver_inc_ref(ctx, solver);
             Builder {
                 ctx: ctx,
@@ -47,7 +47,7 @@ pub struct Gkat {
     is_true_cache: HashMap<BExp, bool>,
     is_false_cache: HashMap<BExp, bool>,
     // builder (HACK: drop last)
-    bexp_builder: Builder,
+    pub(super) bexp_builder: Builder,
 }
 
 impl Gkat {
@@ -153,7 +153,6 @@ impl Gkat {
         unsafe {
             let ast = Z3_mk_iff(self.bexp_builder.ctx, lhs.ast, rhs.ast);
             let ast = Z3_mk_not(self.bexp_builder.ctx, ast);
-            let ast = Z3_simplify(self.bexp_builder.ctx, ast);
             match Z3_solver_check_assumptions(
                 self.bexp_builder.ctx,
                 self.bexp_builder.solver,
