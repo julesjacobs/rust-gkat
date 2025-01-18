@@ -29,4 +29,3 @@ disjoint-sets = "0.4.2"
 cudd-sys = "1.0.0"
 lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
 clap = { version = "4.5.18", features = ["derive"] }
-lru = "0.12.5"
