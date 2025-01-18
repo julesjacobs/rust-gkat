@@ -1,7 +1,6 @@
 use super::*;
 use crate::parsing;
 use ahash::HashMap;
-use disjoint_sets::UnionFindNode;
 use hashconsing::HConsign;
 use std::ptr;
 
@@ -23,7 +22,12 @@ impl Drop for Builder {
 impl Builder {
     pub fn new() -> Self {
         unsafe {
-            let ctx = Z3_mk_context(Z3_mk_config());
+            let cfg = Z3_mk_config();
+            Z3_set_param_value(cfg, c"proof".as_ptr(), c"false".as_ptr());
+            Z3_set_param_value(cfg, c"debug_ref_count".as_ptr(), c"false".as_ptr());
+            Z3_set_param_value(cfg, c"trace".as_ptr(), c"false".as_ptr());
+            Z3_set_param_value(cfg, c"well_sorted_check".as_ptr(), c"false".as_ptr());
+            let ctx = Z3_mk_context(cfg);
             let srt = Z3_mk_bool_sort(ctx);
             let solver = Z3_mk_solver(ctx);
             Z3_solver_inc_ref(ctx, solver);
@@ -42,9 +46,8 @@ pub struct Gkat {
     // caching
     is_true_cache: HashMap<BExp, bool>,
     is_false_cache: HashMap<BExp, bool>,
-    uf_table: HashMap<BExp, UnionFindNode<()>>,
     // builder (HACK: drop last)
-    pub(super) bexp_builder: Builder,
+    bexp_builder: Builder,
 }
 
 impl Gkat {
@@ -55,7 +58,6 @@ impl Gkat {
             // caching
             is_true_cache: HashMap::default(),
             is_false_cache: HashMap::default(),
-            uf_table: HashMap::default(),
             // builder
             bexp_builder: Builder::new(),
         }
@@ -147,36 +149,18 @@ impl Gkat {
         return result;
     }
 
-    fn get_uf(&mut self, b: &BExp) -> UnionFindNode<()> {
-        match self.uf_table.get(b) {
-            Some(node) => node.clone(),
-            None => {
-                let node = UnionFindNode::new(());
-                self.uf_table.insert(b.clone(), node.clone());
-                node
-            }
-        }
-    }
-
     pub fn is_equiv(&mut self, lhs: &BExp, rhs: &BExp) -> bool {
-        let mut uf1 = self.get_uf(lhs);
-        let mut uf2 = self.get_uf(lhs);
-        if uf1 == uf2 {
-            return true;
-        }
         unsafe {
             let ast = Z3_mk_iff(self.bexp_builder.ctx, lhs.ast, rhs.ast);
             let ast = Z3_mk_not(self.bexp_builder.ctx, ast);
+            let ast = Z3_simplify(self.bexp_builder.ctx, ast);
             match Z3_solver_check_assumptions(
                 self.bexp_builder.ctx,
                 self.bexp_builder.solver,
                 1,
                 [ast].as_ptr(),
             ) {
-                Z3_L_FALSE => {
-                    uf1.union(&mut uf2);
-                    true
-                }
+                Z3_L_FALSE => true,
                 Z3_L_UNDEF => panic!("unknown"),
                 Z3_L_TRUE => false,
                 _ => unreachable!(),

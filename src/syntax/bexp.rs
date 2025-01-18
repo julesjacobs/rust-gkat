@@ -1,6 +1,6 @@
 use super::*;
 use core::fmt;
-use std::{ffi::CStr, fmt::Debug, hash::Hash, ptr};
+use std::{ffi::CStr, fmt::Debug, hash::Hash};
 
 pub struct BExp {
     pub(super) ctx: Z3_context,
@@ -38,7 +38,8 @@ impl Debug for BExp {
 
 impl Hash for BExp {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        ptr::hash(self, state);
+        let id = unsafe { Z3_get_ast_id(self.ctx, self.ast) };
+        id.hash(state);
     }
 }
 
@@ -56,6 +57,7 @@ impl BExp {
     pub fn and(&self, other: &Self) -> Self {
         unsafe {
             let ast = Z3_mk_and(self.ctx, 2, [self.ast, other.ast].as_ptr());
+            let ast = Z3_simplify(self.ctx, ast);
             Z3_inc_ref(self.ctx, ast);
             Self {
                 ctx: self.ctx,
@@ -67,6 +69,7 @@ impl BExp {
     pub fn or(&self, other: &Self) -> Self {
         unsafe {
             let ast = Z3_mk_or(self.ctx, 2, [self.ast, other.ast].as_ptr());
+            let ast = Z3_simplify(self.ctx, ast);
             Z3_inc_ref(self.ctx, ast);
             Self {
                 ctx: self.ctx,
@@ -78,6 +81,7 @@ impl BExp {
     pub fn not(&self) -> Self {
         unsafe {
             let ast = Z3_mk_not(self.ctx, self.ast);
+            let ast = Z3_simplify(self.ctx, ast);
             Z3_inc_ref(self.ctx, ast);
             Self {
                 ctx: self.ctx,
