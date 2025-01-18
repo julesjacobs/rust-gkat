@@ -1,4 +1,6 @@
 # benchmarking
+kernel = k1
+solver = bdd
 
 _E250B5P10RD := $(shell find benchmark/e250b5p10rd -name '*.txt')
 _E250B5P10EQ := $(shell find benchmark/e250b5p10eq -name '*.txt')
@@ -23,25 +25,25 @@ E3000B30P200RD := $(subst benchmark/e3000b30p200rd/,e3000b30p200rd/,$(_E3000B30P
 E3000B30P200EQ := $(subst benchmark/e3000b30p200eq/,e3000b30p200eq/,$(_E3000B30P200EQ))
 
 e250b5p10rd/%.txt: benchmark/e250b5p10rd/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e250b5p10eq/%.txt: benchmark/e250b5p10eq/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e500b5p50rd/%.txt: benchmark/e500b5p50rd/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e500b5p50eq/%.txt: benchmark/e500b5p50eq/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e1000b10p100rd/%.txt: benchmark/e1000b10p100rd/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e1000b10p100eq/%.txt: benchmark/e1000b10p100eq/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e2000b20p200rd/%.txt: benchmark/e2000b20p200rd/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e2000b20p200eq/%.txt: benchmark/e2000b20p200eq/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e3000b30p200rd/%.txt: benchmark/e3000b30p200rd/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e3000b30p200eq/%.txt: benchmark/e3000b30p200eq/%.txt 
-	./target/release/rust-gkat -k ${kernel} $<
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 
 e250b5p10rd: $(E250B5P10RD)
 e250b5p10eq: $(E250B5P10EQ)

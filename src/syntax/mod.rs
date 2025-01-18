@@ -1,9 +1,10 @@
-mod bexp;
-mod exp;
 mod gkat;
+mod gkat_bdd;
+mod gkat_z3;
 
-pub use bexp::*;
 use cudd::*;
 use cudd_sys::*;
-pub use exp::*;
 pub use gkat::*;
+pub use gkat_bdd::*;
+pub use gkat_z3::*;
+use z3_sys::*;

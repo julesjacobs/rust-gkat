@@ -2,19 +2,19 @@ use super::*;
 use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
 
-pub type Deriv = Vec<(BExp, Exp, u64)>;
+pub type Deriv<B> = Vec<(B, Exp<B>, u64)>;
 
-pub struct Solver {
+pub struct Solver<B> {
     // search states
-    dead_states: HashSet<Exp>,
-    explored: HashSet<Exp>,
-    uf_table: HashMap<Exp, UnionFindNode<()>>,
+    dead_states: HashSet<Exp<B>>,
+    explored: HashSet<Exp<B>>,
+    uf_table: HashMap<Exp<B>, UnionFindNode<()>>,
     // caching
-    eps_cache: HashMap<Exp, BExp>,
-    drv_cache: HashMap<Exp, Deriv>,
+    eps_cache: HashMap<Exp<B>, B>,
+    drv_cache: HashMap<Exp<B>, Deriv<B>>,
 }
 
-impl Solver {
+impl<B: BExp> Solver<B> {
     pub fn new() -> Self {
         Solver {
             // search init
@@ -27,7 +27,7 @@ impl Solver {
         }
     }
 
-    pub fn get_uf(&mut self, exp: &Exp) -> UnionFindNode<()> {
+    pub fn get_uf(&mut self, exp: &Exp<B>) -> UnionFindNode<()> {
         match self.uf_table.get(exp) {
             Some(node) => node.clone(),
             None => {
@@ -39,38 +39,38 @@ impl Solver {
     }
 
     #[inline]
-    pub fn get_eps(&mut self, exp: &Exp) -> Option<&BExp> {
+    pub fn get_eps(&mut self, exp: &Exp<B>) -> Option<&B> {
         self.eps_cache.get(exp)
     }
 
     #[inline]
-    pub fn set_eps(&mut self, exp: Exp, eps: BExp) {
+    pub fn set_eps(&mut self, exp: Exp<B>, eps: B) {
         self.eps_cache.insert(exp, eps);
     }
 
     #[inline]
-    pub fn get_drv(&mut self, exp: &Exp) -> Option<&Deriv> {
+    pub fn get_drv(&mut self, exp: &Exp<B>) -> Option<&Deriv<B>> {
         self.drv_cache.get(exp)
     }
 
     #[inline]
-    pub fn set_drv(&mut self, exp: Exp, deriv: Deriv) {
+    pub fn set_drv(&mut self, exp: Exp<B>, deriv: Deriv<B>) {
         self.drv_cache.insert(exp, deriv);
     }
 
-    pub fn reject(&mut self, eps: &BExp, dexp: &Deriv) -> BExp {
-        dexp.iter().fold(eps.not(), |acc, (b, _, _)| {
-            let nb = b.not();
-            nb.and(&acc)
+    pub fn reject<G: Gkat<B>>(&mut self, gkat: &mut G, eps: &B, dexp: &Deriv<B>) -> B {
+        dexp.iter().fold(gkat.mk_not(eps), |acc, (b, _, _)| {
+            let nb = gkat.mk_not(b);
+            gkat.mk_and(&nb, &acc)
         })
     }
 
     #[inline]
-    pub fn known_dead(&self, exp: &Exp) -> bool {
+    pub fn known_dead(&self, exp: &Exp<B>) -> bool {
         self.dead_states.contains(&exp)
     }
 
-    pub fn is_dead(&mut self, gkat: &mut Gkat, exp: &Exp) -> bool {
+    pub fn is_dead<G: Gkat<B>>(&mut self, gkat: &mut G, exp: &Exp<B>) -> bool {
         let mut stack = Vec::new();
         stack.push(exp.clone());
         self.explored.clear();
@@ -80,12 +80,8 @@ impl Solver {
             }
             self.explored.insert(exp.clone());
             let eps = self.epsilon(gkat, &exp);
-            if eps.is_false() {
-                for (b, e, _) in self.derivative(gkat, &exp) {
-                    // check is not strictly needed due to eager-pruning
-                    if b.is_false() {
-                        continue;
-                    }
+            if gkat.is_false(&eps) {
+                for (_, e, _) in self.derivative(gkat, &exp) {
                     stack.push(e);
                 }
             } else {
