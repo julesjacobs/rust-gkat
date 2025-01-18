@@ -1,31 +1,38 @@
 use super::*;
-use std::{fmt::Debug, hash::Hash, ptr};
+use core::fmt;
+use std::{ffi::CStr, fmt::Debug, hash::Hash, ptr};
 
 pub struct BExp {
-    pub(super) cudd: *mut DdManager,
-    pub(super) node: *mut DdNode,
+    pub(super) ctx: Z3_context,
+    pub(super) ast: Z3_ast,
 }
 
 impl Drop for BExp {
     fn drop(&mut self) {
-        unsafe { Cudd_RecursiveDeref(self.cudd, self.node) };
+        unsafe { Z3_dec_ref(self.ctx, self.ast) };
     }
 }
 
 impl Clone for BExp {
     fn clone(&self) -> Self {
-        unsafe { Cudd_Ref(self.node) };
+        unsafe { Z3_inc_ref(self.ctx, self.ast) };
         Self {
-            cudd: self.cudd,
-            node: self.node,
+            ctx: self.ctx,
+            ast: self.ast,
         }
     }
 }
 
 impl Debug for BExp {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        unsafe { Cudd_PrintMinterm(self.cudd, self.node) };
-        std::fmt::Result::Ok(())
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        let p = unsafe { Z3_ast_to_string(self.ctx, self.ast) };
+        if p.is_null() {
+            return Result::Err(fmt::Error);
+        }
+        match unsafe { CStr::from_ptr(p) }.to_str() {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => Result::Err(fmt::Error),
+        }
     }
 }
 
@@ -37,7 +44,7 @@ impl Hash for BExp {
 
 impl PartialEq for BExp {
     fn eq(&self, other: &Self) -> bool {
-        self.node == other.node
+        unsafe { Z3_is_eq_ast(self.ctx, self.ast, other.ast) }
     }
 }
 
@@ -48,42 +55,34 @@ impl Eq for BExp {
 impl BExp {
     pub fn and(&self, other: &Self) -> Self {
         unsafe {
-            let node = Cudd_bddAnd(self.cudd, self.node, other.node);
-            Cudd_Ref(node);
+            let ast = Z3_mk_and(self.ctx, 2, [self.ast, other.ast].as_ptr());
+            Z3_inc_ref(self.ctx, ast);
             Self {
-                cudd: self.cudd,
-                node: node,
+                ctx: self.ctx,
+                ast: ast,
             }
         }
     }
 
     pub fn or(&self, other: &Self) -> Self {
         unsafe {
-            let node = Cudd_bddOr(self.cudd, self.node, other.node);
-            Cudd_Ref(node);
+            let ast = Z3_mk_or(self.ctx, 2, [self.ast, other.ast].as_ptr());
+            Z3_inc_ref(self.ctx, ast);
             Self {
-                cudd: self.cudd,
-                node: node,
+                ctx: self.ctx,
+                ast: ast,
             }
         }
     }
 
     pub fn not(&self) -> Self {
         unsafe {
-            let node = Cudd_Not(self.node);
-            Cudd_Ref(node);
+            let ast = Z3_mk_not(self.ctx, self.ast);
+            Z3_inc_ref(self.ctx, ast);
             Self {
-                cudd: self.cudd,
-                node: node,
+                ctx: self.ctx,
+                ast: ast,
             }
         }
-    }
-
-    pub fn is_true(&self) -> bool {
-        unsafe { self.node == Cudd_ReadOne(self.cudd) }
-    }
-
-    pub fn is_false(&self) -> bool {
-        unsafe { self.node == Cudd_ReadLogicZero(self.cudd) }
     }
 }

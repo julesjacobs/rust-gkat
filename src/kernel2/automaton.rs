@@ -66,7 +66,7 @@ impl Solver {
                 let eps_star = r1.eps_star.and(&r2.eps_star);
                 // delta_star
                 let mut delta_star = r1.delta_star;
-                let delta_ext = GuardIterator::new(&r1.eps_star, r2.delta_star.iter());
+                let delta_ext = GuardIterator::new(gkat, &r1.eps_star, r2.delta_star.iter());
                 delta_star.extend(delta_ext);
                 // eps_hat
                 let mut eps_hat = r1.eps_hat.clone();
@@ -78,7 +78,7 @@ impl Solver {
                 let mut delta_hat = r1.delta_hat;
                 for (i, elems) in delta_hat.iter_mut() {
                     let guard = r1.eps_hat.get(i).unwrap();
-                    let elems_ext = GuardIterator::new(guard, r2.delta_star.iter());
+                    let elems_ext = GuardIterator::new(gkat, guard, r2.delta_star.iter());
                     elems.extend(elems_ext);
                 }
                 delta_hat.extend(r2.delta_hat);
@@ -99,8 +99,9 @@ impl Solver {
                 let r2_eps = nb.and(&r2.eps_star);
                 let eps_star = r1_eps.or(&r2_eps);
                 // delta_star
-                let mut delta_star: Vec<_> = GuardIterator::new(b, r1.delta_star.iter()).collect();
-                let delta_ext = GuardIterator::new(&nb, r2.delta_star.iter());
+                let mut delta_star: Vec<_> =
+                    GuardIterator::new(gkat, b, r1.delta_star.iter()).collect();
+                let delta_ext = GuardIterator::new(gkat, &nb, r2.delta_star.iter());
                 delta_star.extend(delta_ext);
                 // eps_hat
                 let mut eps_hat = r1.eps_hat;
@@ -127,7 +128,7 @@ impl Solver {
                 // eps_star
                 let eps_star = b.not();
                 // delta_star
-                let delta_star = GuardIterator::new(b, r.delta_star.iter()).collect();
+                let delta_star = GuardIterator::new(gkat, b, r.delta_star.iter()).collect();
                 // eps_hat
                 let mut eps_hat = r.eps_hat.clone();
                 let nb = b.not();
@@ -139,7 +140,7 @@ impl Solver {
                 for (i, elems) in delta_hat.iter_mut() {
                     let bx = r.eps_hat.get(i).unwrap();
                     let guard = b.and(bx);
-                    let elems_ext = GuardIterator::new(&guard, r.delta_star.iter());
+                    let elems_ext = GuardIterator::new(gkat, &guard, r.delta_star.iter());
                     elems.extend(elems_ext);
                 }
                 // raw_automaton

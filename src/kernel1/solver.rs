@@ -80,10 +80,10 @@ impl Solver {
             }
             self.explored.insert(exp.clone());
             let eps = self.epsilon(gkat, &exp);
-            if eps.is_false() {
+            if gkat.is_false(&eps) {
                 for (b, e, _) in self.derivative(gkat, &exp) {
                     // check is not strictly needed due to eager-pruning
-                    if b.is_false() {
+                    if gkat.is_false(&b) {
                         continue;
                     }
                     stack.push(e);

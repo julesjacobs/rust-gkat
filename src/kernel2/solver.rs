@@ -55,7 +55,7 @@ impl Solver {
         self.dead_states.contains(st)
     }
 
-    pub fn is_dead(&mut self, st: u64, m: &Automaton) -> bool {
+    pub fn is_dead(&mut self, gkat: &mut Gkat, st: u64, m: &Automaton) -> bool {
         let mut stack = Vec::new();
         stack.push(st);
         self.explored.clear();
@@ -65,10 +65,10 @@ impl Solver {
             }
             self.explored.insert(st);
             let eps = m.eps_hat.get(&st).unwrap();
-            if eps.is_false() {
+            if gkat.is_false(&eps) {
                 for (b, st, _) in m.delta_hat.get(&st).unwrap() {
                     // check is not strictly needed due to eager-pruning
-                    if b.is_false() {
+                    if gkat.is_false(b) {
                         continue;
                     }
                     stack.push(*st);

@@ -46,8 +46,8 @@ impl Solver {
                 let nb = b.not();
                 let dexp1 = self.derivative(gkat, p1);
                 let dexp2 = self.derivative(gkat, p2);
-                let mut dexp: Vec<_> = GuardIterator::new(b, dexp1.iter()).collect();
-                let dexp_ext = GuardIterator::new(&nb, dexp2.iter());
+                let mut dexp: Vec<_> = GuardIterator::new(gkat, b, dexp1.iter()).collect();
+                let dexp_ext = GuardIterator::new(gkat, &nb, dexp2.iter());
                 dexp.extend(dexp_ext);
                 dexp
             }
@@ -59,7 +59,7 @@ impl Solver {
                     let seq_exp = gkat.mk_seq(e.clone(), p2.clone());
                     *e = seq_exp
                 }
-                let dexp_ext = GuardIterator::new(&eps, dexp2.iter());
+                let dexp_ext = GuardIterator::new(gkat, &eps, dexp2.iter());
                 dexp.extend(dexp_ext);
                 dexp
             }
@@ -68,7 +68,7 @@ impl Solver {
                 dexp.into_iter()
                     .filter_map(|(b, e, a)| {
                         let guard = b.and(be);
-                        if guard.is_false() {
+                        if gkat.is_false(&guard) {
                             None
                         } else {
                             let seq_exp = gkat.mk_seq(e.clone(), exp.clone());

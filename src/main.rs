@@ -43,7 +43,7 @@ fn main() {
             let mut solver = kernel2::Solver::new();
             let (i, m) = solver.mk_automaton(&mut gkat, &exp1);
             let (j, n) = solver.mk_automaton(&mut gkat, &exp2);
-            solver.equiv_iter(i, j, &m, &n)
+            solver.equiv_iter(&mut gkat, i, j, &m, &n)
         }
     };
 

@@ -64,9 +64,9 @@ impl Gkat {
     }
 
     pub fn mk_ifte(&mut self, b: BExp, p1: Exp, p2: Exp) -> Exp {
-        if b.is_true() {
+        if self.is_true(&b) {
             p1
-        } else if b.is_false() {
+        } else if self.is_false(&b) {
             p2
         } else if p1 == self.mk_fail() {
             let nb = b.not();
