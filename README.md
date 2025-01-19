@@ -74,7 +74,7 @@ binary form as `(seq A (seq B C))`.
 ### Benchmarks
 We provide a set of benchmarks for evaluating the performance of `rust-gkat`.
 These benchmarks follow a simple naming scheme describing the expression pairs
-inside. For example, the benchmark `e250b5p10ne` contains expressions which have
+inside. For example, the benchmark `e250b5p10eq` contains expressions which have
 approximately 250 primitive actions (`e250`), a maximum boolean expression size
 of 5 (`b5`), 10 possible boolean variables (`p10`) and are known to be
 equivalent (`eq`). Benchmarks with the suffix `ne` have expression pairs which
