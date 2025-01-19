@@ -13,7 +13,7 @@ cargo build --release
 The resulting executable can be found at `target/release/rust-gkat`.
 
 ## Usage
-`rust-gkat` offers 2 kernels and 2 solver backends for checking equivalence of boolean expressions.
+`rust-gkat` offers 2 equivalence checking kernels backed by 2 satisfiability solver backends.
 
 - kernel `k1`: symbolic derivative method (default)
 ``` sh
@@ -30,7 +30,7 @@ rust-gkat -k k2 ./input/test00.txt
 rust-gkat -s bdd ./input/test00.txt
 ```
 
-- solver `sat`: use SAT solver (MiniSat2) for boolean satisfiability checking
+- solver `sat`: use a SAT solver (MiniSat2) for boolean satisfiability checking
 ``` sh
 rust-gkat -s sat ./input/test00.txt
 ```
