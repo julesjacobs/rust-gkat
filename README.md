@@ -42,6 +42,26 @@ Each input file consists of 3 s-expressions. The first 2 s-expressions are the
 GKAT expressions for equivalence testing. The final `(equiv ...)` marks whether
 these 2 expressions are expected to be equivalent or not.
 
+```
+<const> ::= 0 | 1
+
+<bexp> ::= <const> | identifier
+         | ( and <bexp> {<bexp>}+ )
+         | ( or  <bexp> {<bexp>}+ )
+         | ( not <bexp> )
+
+ <exp> ::= identifier 
+         | ( test <bexp> )
+         | ( seq <exp> {<exp>}+ )
+         | ( if <bexp> <exp> <exp> )
+         | ( while <bexp> <exp> )
+
+<format> ::= <exp> <exp> ( equiv <const> )
+```
+
+For n-ary syntax such as `(and A B C)`, it is parsed right-associatively into
+binary form as `(and A (and B C))`.
+
 Sample from `input/test10.txt`:
 ```
 (seq
@@ -66,9 +86,6 @@ Sample from `input/test10.txt`:
 
 (equiv 1)
 ```
-
-For n-ary syntax such as `(seq A B C)`, it is parsed right-associatively into
-binary form as `(seq A (seq B C))`.
 
 ## Performance and Evaluation
 ### Benchmarks
