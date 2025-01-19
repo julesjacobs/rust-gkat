@@ -93,7 +93,7 @@ for checking larger expressions. The following table lists the total time and
 peak memory used for each benchmark.
 
 #### Benchmark Total Time Usage
-| Dataset        | Time (k1-bdd) | Time (k2-bdd) | Time (k1-sat) | Time (k2-sat) | Time (sk) |
+| Benchmark      | Time (k1-bdd) | Time (k2-bdd) | Time (k1-sat) | Time (k2-sat) | Time (sk) |
 | -------------- | ------------- | ------------- | ------------- | ------------- | --------- |
 | E250B5P10RD    | 0.19s         | 0.18s         | 0.20s         | 0.23s         | 5.82s     |
 | E250B5P10EQ    | 0.21s         | 0.18s         | 0.18s         | 0.29s         | 2.83s     |
@@ -108,7 +108,7 @@ peak memory used for each benchmark.
 | DEGENERATE     | 220.53s       | 232.63s       | 0.42s         | 0.93s         | OutOfMem  |
 
 #### Benchmark Peak Memory Usage
-| Dataset        | Mem (k1-bdd) | Mem (k2-bdd) | Mem (k1-sat) | Mem (k2-sat) | Memory (sk) |
+| Benchmark      | Mem (k1-bdd) | Mem (k2-bdd) | Mem (k1-sat) | Mem (k2-sat) | Memory (sk) |
 | -------------- | ------------ | ------------ | ------------ | ------------ | ----------- |
 | E250B5P10RD    | 15.36MB      | 14.76MB      | 6.81MB       | 7.02MB       | 114.06MB    |
 | E250B5P10EQ    | 15.56MB      | 14.95MB      | 7.06MB       | 7.25MB       | 100.48MB    |
