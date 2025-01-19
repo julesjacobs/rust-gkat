@@ -14,6 +14,7 @@ _E2000B20P200RD := $(shell find benchmark/e2000b20p200rd -name '*.txt')
 _E2000B20P200EQ := $(shell find benchmark/e2000b20p200eq -name '*.txt')
 _E3000B30P200RD := $(shell find benchmark/e3000b30p200rd -name '*.txt')
 _E3000B30P200EQ := $(shell find benchmark/e3000b30p200eq -name '*.txt')
+_DEGENERATE := $(shell find benchmark/degenerate -name '*.txt')
 
 DATASET0 := $(subst dataset0/,test0/,$(_DATASET0))
 DATASET1 := $(subst dataset1/,test1/,$(_DATASET1))
@@ -27,6 +28,7 @@ E2000B20P200RD := $(subst benchmark/e2000b20p200rd/,e2000b20p200rd/,$(_E2000B20P
 E2000B20P200EQ := $(subst benchmark/e2000b20p200eq/,e2000b20p200eq/,$(_E2000B20P200EQ))
 E3000B30P200RD := $(subst benchmark/e3000b30p200rd/,e3000b30p200rd/,$(_E3000B30P200RD))
 E3000B30P200EQ := $(subst benchmark/e3000b30p200eq/,e3000b30p200eq/,$(_E3000B30P200EQ))
+DEGENERATE := $(subst benchmark/degenerate/,degenerate/,$(_DEGENERATE))
 
 test0/%.txt: dataset0/%.txt 
 	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
@@ -52,6 +54,8 @@ e3000b30p200rd/%.txt: benchmark/e3000b30p200rd/%.txt
 	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 e3000b30p200eq/%.txt: benchmark/e3000b30p200eq/%.txt 
 	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
+degenerate/%.txt: benchmark/degenerate/%.txt 
+	./target/release/rust-gkat -k ${kernel} -s ${solver} $<
 
 test0: $(DATASET0)
 test1: $(DATASET1)
@@ -65,3 +69,4 @@ e2000b20p200rd: $(E2000B20P200RD)
 e2000b20p200eq: $(E2000B20P200EQ)
 e3000b30p200rd: $(E3000B30P200RD)
 e3000b30p200eq: $(E3000B30P200EQ)
+degenerate: $(DEGENERATE)

@@ -105,7 +105,7 @@ peak memory used for each benchmark.
 | E2000B20P200EQ | 3.34s         | 3.03s         | 0.67s         | 3.14s         | OutOfMem  |
 | E3000B30P200RD | 1.75s         | 26.38s        | 1.91s         | 4.46s         | OutOfMem  |
 | E3000B30P200EQ | 17.86s        | 22.59s        | 1.09s         | 5.25s         | OutOfMem  |
-| DEGENERATE     |               |               |               |               | OutOfMem  |
+| DEGENERATE     | 220.53s       | 232.63s       | 0.42s         | 0.93s         | OutOfMem  |
 
 #### Benchmark Peak Memory Usage
 | Dataset        | Mem (k1-bdd) | Mem (k2-bdd) | Mem (k1-sat) | Mem (k2-sat) | Memory (sk) |
@@ -120,4 +120,4 @@ peak memory used for each benchmark.
 | E2000B20P200EQ | 107.92MB     | 102.46MB     | 13.20MB      | 14.02MB      | OutOfMem    |
 | E3000B30P200RD | 112.59MB     | 1235.46MB    | 21.44MB      | 20.10MB      | OutOfMem    |
 | E3000B30P200EQ | 245.92MB     | 228.85MB     | 21.41MB      | 18.15MB      | OutOfMem    |
-| DEGENERATE     |              |              |              |              | OutOfMem    |
+| DEGENERATE     | 631.47MB     | 1229.30MB    | 19.62MB      | 18.43MB      | OutOfMem    |
