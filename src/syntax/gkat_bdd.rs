@@ -1,7 +1,8 @@
 use super::*;
 use ahash::HashMap;
 use core::fmt;
-use cudd::{Cudd_Init, CUDD_CACHE_SLOTS, CUDD_UNIQUE_SLOTS};
+use cudd::*;
+use cudd_sys::*;
 use hashconsing::{HConsign, HashConsign};
 use std::{fmt::Debug, hash::Hash, ptr};
 

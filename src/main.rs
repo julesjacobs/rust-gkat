@@ -21,7 +21,7 @@ enum Kernel {
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Solver {
     BDD,
-    Z3,
+    SAT,
 }
 
 #[derive(Parser, Debug)]
@@ -46,8 +46,8 @@ fn main() {
                 let exp2 = gkat.from_exp(exp2);
                 solver.equiv_iter(&mut gkat, &exp1, &exp2)
             }
-            Solver::Z3 => {
-                let mut gkat = Z3Gkat::new();
+            Solver::SAT => {
+                let mut gkat = SATGkat::new();
                 let mut solver = kernel1::Solver::new();
                 let exp1 = gkat.from_exp(exp1);
                 let exp2 = gkat.from_exp(exp2);
@@ -64,8 +64,8 @@ fn main() {
                 let (j, n) = solver.mk_automaton(&mut gkat, &exp2);
                 solver.equiv_iter(&mut gkat, i, j, &m, &n)
             }
-            Solver::Z3 => {
-                let mut gkat = Z3Gkat::new();
+            Solver::SAT => {
+                let mut gkat = SATGkat::new();
                 let mut solver = kernel2::Solver::new();
                 let exp1 = gkat.from_exp(exp1);
                 let exp2 = gkat.from_exp(exp2);
