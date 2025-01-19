@@ -157,10 +157,6 @@ impl Gkat<BDDBExp> for BDDGkat {
         }
     }
 
-    fn is_true(&mut self, b: &BDDBExp) -> bool {
-        unsafe { b.node == Cudd_ReadOne(self.man.0) }
-    }
-
     fn is_false(&mut self, b: &BDDBExp) -> bool {
         unsafe { b.node == Cudd_ReadLogicZero(self.man.0) }
     }

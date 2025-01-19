@@ -30,7 +30,6 @@ pub trait Gkat<B: Clone + Hash + Eq> {
     fn mk_and(&mut self, b1: &B, b2: &B) -> B;
     fn mk_or(&mut self, b1: &B, b2: &B) -> B;
     fn mk_not(&mut self, b: &B) -> B;
-    fn is_true(&mut self, b: &B) -> bool;
     fn is_false(&mut self, b: &B) -> bool;
     fn is_equiv(&mut self, b1: &B, b2: &B) -> bool;
 
@@ -106,11 +105,7 @@ pub trait Gkat<B: Clone + Hash + Eq> {
     }
 
     fn mk_ifte(&mut self, b: B, p1: Exp<B>, p2: Exp<B>) -> Exp<B> {
-        if self.is_true(&b) {
-            p1
-        } else if self.is_false(&b) {
-            p2
-        } else if p1 == self.mk_fail() {
+        if p1 == self.mk_fail() {
             let nb = self.mk_not(&b);
             let p1 = self.mk_test(nb);
             self.mk_seq(p1, p2)

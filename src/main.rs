@@ -14,14 +14,14 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Kernel {
-    K1,
-    K2,
+    K1, // Symbolic derivative method
+    K2, // Symbolic Thompson's construction
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum Solver {
-    BDD,
-    SAT,
+    BDD, // CUDD
+    SAT, // MiniSat2 via LogicNG
 }
 
 #[derive(Parser, Debug)]

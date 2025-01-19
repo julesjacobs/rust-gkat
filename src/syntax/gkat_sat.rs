@@ -57,18 +57,6 @@ impl Gkat<EncodedFormula> for SATGkat {
         self.man.not(*b)
     }
 
-    fn is_true(&mut self, b: &EncodedFormula) -> bool {
-        let nb = self.mk_not(b);
-        self.solver.add(nb, &self.man);
-        let result = match self.solver.sat() {
-            sat::Tristate::True => false,
-            sat::Tristate::False => true,
-            sat::Tristate::Undef => panic!("unknown"),
-        };
-        self.solver.reset();
-        return result;
-    }
-
     fn is_false(&mut self, b: &EncodedFormula) -> bool {
         self.solver.add(*b, &self.man);
         let result = match self.solver.sat() {
