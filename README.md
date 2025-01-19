@@ -95,29 +95,29 @@ peak memory used for each benchmark.
 #### Benchmark Total Time Usage
 | Benchmark      | Time (k1-bdd) | Time (k2-bdd) | Time (k1-sat) | Time (k2-sat) | Time (sk) |
 | -------------- | ------------- | ------------- | ------------- | ------------- | --------- |
-| E250B5P10RD    | 0.19s         | 0.18s         | 0.20s         | 0.23s         | 5.82s     |
-| E250B5P10EQ    | 0.21s         | 0.18s         | 0.18s         | 0.29s         | 2.83s     |
-| E500B5P50RD    | 0.23s         | 0.22s         | 0.27s         | 0.39s         | 37.28s    |
-| E500B5P50EQ    | 0.26s         | 0.21s         | 0.28s         | 0.57s         | 14.06s    |
-| E1000B10P100RD | 0.31s         | 0.37s         | 0.48s         | 0.85s         | Timeout   |
-| E1000B10P100EQ | 0.37s         | 0.28s         | 0.44s         | 1.04s         | 77.83s    |
-| E2000B20P200RD | 1.50s         | 2.75s         | 0.99s         | 2.01s         | OutOfMem  |
-| E2000B20P200EQ | 3.34s         | 3.03s         | 0.67s         | 3.14s         | OutOfMem  |
-| E3000B30P200RD | 1.75s         | 26.38s        | 1.91s         | 4.46s         | OutOfMem  |
-| E3000B30P200EQ | 17.86s        | 22.59s        | 1.09s         | 5.25s         | OutOfMem  |
-| DEGENERATE     | 220.53s       | 232.63s       | 0.42s         | 0.93s         | OutOfMem  |
+| e250b5p10rd    | 0.19s         | 0.18s         | 0.20s         | 0.23s         | 5.82s     |
+| e250b5p10eq    | 0.21s         | 0.18s         | 0.18s         | 0.29s         | 2.83s     |
+| e500b5p50rd    | 0.23s         | 0.22s         | 0.27s         | 0.39s         | 37.28s    |
+| e500b5p50eq    | 0.26s         | 0.21s         | 0.28s         | 0.57s         | 14.06s    |
+| e1000b10p100rd | 0.31s         | 0.37s         | 0.48s         | 0.85s         | timeout   |
+| e1000b10p100eq | 0.37s         | 0.28s         | 0.44s         | 1.04s         | 77.83s    |
+| e2000b20p200rd | 1.50s         | 2.75s         | 0.99s         | 2.01s         | timeout   |
+| e2000b20p200eq | 3.34s         | 3.03s         | 0.67s         | 3.14s         | timeout   |
+| e3000b30p200rd | 1.75s         | 26.38s        | 1.91s         | 4.46s         | timeout   |
+| e3000b30p200eq | 17.86s        | 22.59s        | 1.09s         | 5.25s         | timeout   |
+| degenerate     | 220.53s       | 232.63s       | 0.42s         | 0.93s         | timeout   |
 
 #### Benchmark Peak Memory Usage
 | Benchmark      | Mem (k1-bdd) | Mem (k2-bdd) | Mem (k1-sat) | Mem (k2-sat) | Memory (sk) |
 | -------------- | ------------ | ------------ | ------------ | ------------ | ----------- |
-| E250B5P10RD    | 15.36MB      | 14.76MB      | 6.81MB       | 7.02MB       | 114.06MB    |
-| E250B5P10EQ    | 15.56MB      | 14.95MB      | 7.06MB       | 7.25MB       | 100.48MB    |
-| E500B5P50RD    | 16.26MB      | 15.49MB      | 7.02MB       | 7.25MB       | 524.89MB    |
-| E500B5P50EQ    | 17.97MB      | 15.54MB      | 7.07MB       | 7.27MB       | 546.914MB   |
-| E1000B10P100RD | 18.21MB      | 21.41MB      | 8.22MB       | 7.99MB       | Timeout     |
-| E1000B10P100EQ | 20.41MB      | 17.66MB      | 8.69MB       | 7.63MB       | 5822.66MB   |
-| E2000B20P200RD | 239.71MB     | 283.45MB     | 13.33MB      | 11.92MB      | OutOfMem    |
-| E2000B20P200EQ | 107.92MB     | 102.46MB     | 13.20MB      | 14.02MB      | OutOfMem    |
-| E3000B30P200RD | 112.59MB     | 1235.46MB    | 21.44MB      | 20.10MB      | OutOfMem    |
-| E3000B30P200EQ | 245.92MB     | 228.85MB     | 21.41MB      | 18.15MB      | OutOfMem    |
-| DEGENERATE     | 631.47MB     | 1229.30MB    | 19.62MB      | 18.43MB      | OutOfMem    |
+| e250b5p10rd    | 15.36MB      | 14.76MB      | 6.81MB       | 7.02MB       | 114.06MB    |
+| e250b5p10eq    | 15.56MB      | 14.95MB      | 7.06MB       | 7.25MB       | 100.48MB    |
+| e500b5p50rd    | 16.26MB      | 15.49MB      | 7.02MB       | 7.25MB       | 524.89MB    |
+| e500b5p50eq    | 17.97MB      | 15.54MB      | 7.07MB       | 7.27MB       | 546.914MB   |
+| e1000b10p100rd | 18.21MB      | 21.41MB      | 8.22MB       | 7.99MB       | timeout     |
+| e1000b10p100eq | 20.41MB      | 17.66MB      | 8.69MB       | 7.63MB       | 5822.66MB   |
+| e2000b20p200rd | 239.71MB     | 283.45MB     | 13.33MB      | 11.92MB      | timeout     |
+| e2000b20p200eq | 107.92MB     | 102.46MB     | 13.20MB      | 14.02MB      | timeout     |
+| e3000b30p200rd | 112.59MB     | 1235.46MB    | 21.44MB      | 20.10MB      | timeout     |
+| e3000b30p200eq | 245.92MB     | 228.85MB     | 21.41MB      | 18.15MB      | timeout     |
+| degenerate     | 631.47MB     | 1229.30MB    | 19.62MB      | 18.43MB      | timeout     |
