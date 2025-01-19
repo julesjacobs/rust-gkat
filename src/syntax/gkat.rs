@@ -12,7 +12,7 @@ pub trait BExp: Debug + Clone + Hash + Eq {}
 // Type for generic Exp.
 pub type Exp<B> = HConsed<Exp_<B>>;
 
-#[derive(Debug, Hash, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Exp_<B> {
     Act(u64),
     Seq(Exp<B>, Exp<B>),
@@ -22,7 +22,7 @@ pub enum Exp_<B> {
 }
 
 // Trait for generic Gkat manager.
-pub trait Gkat<B: BExp> {
+pub trait Gkat<B: Clone + Hash + Eq> {
     // Methods for BExp.
     fn mk_zero(&mut self) -> B;
     fn mk_one(&mut self) -> B;
