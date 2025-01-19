@@ -13,16 +13,29 @@ cargo build --release
 The resulting executable can be found at `target/release/rust-gkat`.
 
 ## Usage
-`rust-gkat` offers 2 solver kernels for checking equivalence of boolean expressions.
+`rust-gkat` offers 2 kernels and 2 solver backends for checking equivalence of boolean expressions.
 
 - kernel `k1`: symbolic derivative method (default)
 ``` sh
 rust-gkat -k k1 ./input/test00.txt
 ```
+
 - kernel `k2`: symbolic thompson's construction
 ``` sh
 rust-gkat -k k2 ./input/test00.txt
 ```
+
+- solver `bdd`: use Binary Decision Diagrams (CUDD) for boolean satisfiability checking (default)
+``` sh
+rust-gkat -s bdd ./input/test00.txt
+```
+
+- solver `sat`: use SAT solver (MiniSat2) for boolean satisfiability checking
+``` sh
+rust-gkat -s sat ./input/test00.txt
+```
+
+Kernels and solvers can be mixed freely.
 
 ## Input Format
 Each input file consists of 3 s-expressions. The first 2 s-expressions are the
@@ -67,9 +80,10 @@ size of 5 (`b5`), 10 possible boolean variables (`p10`) and are completely
 random (`rd`). Benchmarks with the suffix `eq` have expression pairs which are
 known to be equivalent. 
 
-One can use `make [dataset] kernel=[k1|k2]` to run `rust-gkat` on a particular
-dataset. For example, `make e250b5p10rd kernel=k1` runs `rust-gkat` on all
-expression pairs contained in dataset `e250b5p10rd` using kernel `k1`.
+One can use `make [dataset] kernel=[k1|k2] solver=[bdd|sat]` to run `rust-gkat`
+on a particular dataset. For example, `make e250b5p10rd kernel=k1 solver=bdd`
+runs `rust-gkat` on all expression pairs contained in dataset `e250b5p10rd`
+using kernel `k1` and solver `bdd`.
 
 ### Results
 We evaluate the performance of `rust-gkat` in terms of time and memory usage. We
@@ -78,13 +92,32 @@ also compare `rust-gkat` with a modified version of
 for checking larger expressions. The following table lists the total time and
 peak memory used for each benchmark.
 
-| Dataset        | Time (k1) | Time (k2) | Time (sk) | Memory (k1) | Memory (k2) | Memory (sk) |
-| -------------- | --------- | --------- | --------- | ----------- | ----------- | ----------- |
-| E250B5P10RD    | 0.19s     | 0.18s     | 5.82s     | 15.36MB     | 14.76MB     | 114.06MB    |
-| E250B5P10EQ    | 0.21s     | 0.18s     | 2.83s     | 15.56MB     | 14.95MB     | 100.48MB    |
-| E500B5P50RD    | 0.23s     | 0.22s     | 37.28s    | 16.26MB     | 15.49MB     | 524.89MB    |
-| E500B5P50EQ    | 0.26s     | 0.21s     | 14.06s    | 17.97MB     | 15.54MB     | 546.914MB   |
-| E1000B10P100RD | 0.31s     | 0.37s     | TIMEOUT   | 18.21MB     | 21.41MB     | N/A         |
-| E1000B10P100EQ | 0.37s     | 0.28s     | 77.83s    | 20.41MB     | 17.66MB     | 5822.66MB   |
-| E2000B20P200RD | 1.50s     | 2.75s     | TIMEOUT   | 239.71MB    | 283.45MB    | N/A         |
-| E2000B20P200EQ | 3.34s     | 3.03s     | TIMEOUT   | 107.92MB    | 102.46MB    | N/A         |
+#### Benchmark Total Time Usage
+| Dataset        | Time (k1-bdd) | Time (k2-bdd) | Time (k1-sat) | Time (k2-sat) | Time (sk) |
+| -------------- | ------------- | ------------- | ------------- | ------------- | --------- |
+| E250B5P10RD    | 0.19s         | 0.18s         | 0.20s         | 0.23s         | 5.82s     |
+| E250B5P10EQ    | 0.21s         | 0.18s         | 0.18s         | 0.29s         | 2.83s     |
+| E500B5P50RD    | 0.23s         | 0.22s         | 0.27s         | 0.39s         | 37.28s    |
+| E500B5P50EQ    | 0.26s         | 0.21s         | 0.28s         | 0.57s         | 14.06s    |
+| E1000B10P100RD | 0.31s         | 0.37s         | 0.48s         | 0.85s         | Timeout   |
+| E1000B10P100EQ | 0.37s         | 0.28s         | 0.44s         | 1.04s         | 77.83s    |
+| E2000B20P200RD | 1.50s         | 2.75s         | 0.99s         | 2.01s         | OutOfMem  |
+| E2000B20P200EQ | 3.34s         | 3.03s         | 0.67s         | 3.14s         | OutOfMem  |
+| E3000B30P200RD | 1.75s         | 26.38s        | 1.91s         | 4.46s         | OutOfMem  |
+| E3000B30P200EQ | 17.86s        | 22.59s        | 1.09s         | 5.25s         | OutOfMem  |
+| DEGENERATE     |               |               |               |               | OutOfMem  |
+
+#### Benchmark Peak Memory Usage
+| Dataset        | Mem (k1-bdd) | Mem (k2-bdd) | Mem (k1-sat) | Mem (k2-sat) | Memory (sk) |
+| -------------- | ------------ | ------------ | ------------ | ------------ | ----------- |
+| E250B5P10RD    | 15.36MB      | 14.76MB      | 6.81MB       | 7.02MB       | 114.06MB    |
+| E250B5P10EQ    | 15.56MB      | 14.95MB      | 7.06MB       | 7.25MB       | 100.48MB    |
+| E500B5P50RD    | 16.26MB      | 15.49MB      | 7.02MB       | 7.25MB       | 524.89MB    |
+| E500B5P50EQ    | 17.97MB      | 15.54MB      | 7.07MB       | 7.27MB       | 546.914MB   |
+| E1000B10P100RD | 18.21MB      | 21.41MB      | 8.22MB       | 7.99MB       | Timeout     |
+| E1000B10P100EQ | 20.41MB      | 17.66MB      | 8.69MB       | 7.63MB       | 5822.66MB   |
+| E2000B20P200RD | 239.71MB     | 283.45MB     | 13.33MB      | 11.92MB      | OutOfMem    |
+| E2000B20P200EQ | 107.92MB     | 102.46MB     | 13.20MB      | 14.02MB      | OutOfMem    |
+| E3000B30P200RD | 112.59MB     | 1235.46MB    | 21.44MB      | 20.10MB      | OutOfMem    |
+| E3000B30P200EQ | 245.92MB     | 228.85MB     | 21.41MB      | 18.15MB      | OutOfMem    |
+| DEGENERATE     |              |              |              |              | OutOfMem    |
