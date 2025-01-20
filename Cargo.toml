@@ -15,13 +15,16 @@ debug = true
 [profile.release]
 overflow-checks = false
 opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
 debug = true
 
 [build-dependencies]
 lalrpop = "0.21.0"
 
 [dependencies]
-mimalloc = "0.1.43"
+mimalloc = { version = "0.1.43", default-features = false }
 recursive = "0.1.1"
 gxhash = "3.4.1"
 hashconsing = "1.6.0"
