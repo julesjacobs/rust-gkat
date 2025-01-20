@@ -67,16 +67,12 @@ pub trait Gkat<B: Clone + Hash + Eq> {
         self.hashcons(Exp_::Act(a))
     }
 
-    fn mk_skip(&mut self) -> Exp<B> {
-        let b = self.mk_one();
-        self.mk_test(b)
-    }
-
     fn mk_fail(&mut self) -> Exp<B> {
         let b = self.mk_zero();
         self.mk_test(b)
     }
 
+    #[inline]
     fn mk_test(&mut self, b: B) -> Exp<B> {
         self.hashcons(Exp_::Test(b))
     }
@@ -88,19 +84,11 @@ pub trait Gkat<B: Clone + Hash + Eq> {
                 let b3 = self.mk_and(&b1, &b2);
                 self.mk_test(b3)
             }
-            _ => {
-                if p1 == self.mk_skip() {
-                    p2
-                } else if p2 == self.mk_skip() {
-                    p1
-                } else if p1 == self.mk_fail() {
-                    self.mk_fail()
-                } else if p2 == self.mk_fail() {
-                    self.mk_fail()
-                } else {
-                    self.hashcons(Exp_::Seq(p1, p2))
-                }
-            }
+            (Test(b), _) if b == &self.mk_zero() => self.mk_fail(),
+            (_, Test(b)) if b == &self.mk_zero() => self.mk_fail(),
+            (Test(b), _) if b == &self.mk_one() => p2,
+            (_, Test(b)) if b == &self.mk_one() => p1,
+            _ => self.hashcons(Exp_::Seq(p1, p2)),
         }
     }
 
@@ -117,6 +105,7 @@ pub trait Gkat<B: Clone + Hash + Eq> {
         }
     }
 
+    #[inline]
     fn mk_while(&mut self, b: B, p: Exp<B>) -> Exp<B> {
         self.hashcons(Exp_::While(b, p))
     }

@@ -48,12 +48,11 @@ impl<B: BExp> Solver<B> {
 
     pub fn reject<G: Gkat<B>>(&mut self, gkat: &mut G, st: u64, m: &Automaton<B>) -> B {
         let eps = m.eps_hat.get(&st).unwrap();
-        let mut result = gkat.mk_not(eps);
-        for (b, _, _) in m.delta_hat.get(&st).unwrap() {
+        let dexp = m.delta_hat.get(&st).unwrap();
+        dexp.iter().fold(gkat.mk_not(eps), |acc, (b, _, _)| {
             let nb = gkat.mk_not(b);
-            result = gkat.mk_and(&result, &nb)
-        }
-        return result;
+            gkat.mk_and(&nb, &acc)
+        })
     }
 
     #[inline]

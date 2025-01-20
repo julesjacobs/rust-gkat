@@ -25,12 +25,11 @@ impl<B: BExp> Solver<B> {
                 let eps2 = n.eps_hat.get(&j).unwrap();
                 let delta1 = m.delta_hat.get(&i).unwrap();
                 let delta2 = n.delta_hat.get(&j).unwrap();
-                let reject1 = self.reject(gkat, i, m);
-                let reject2 = self.reject(gkat, j, n);
 
                 if !(gkat.is_equiv(&eps1, &eps2)) {
                     return false;
                 }
+                let reject1 = self.reject(gkat, i, m);
                 let assert1 = delta2.iter().all(|(b0, st, _)| {
                     let b1 = gkat.mk_and(&reject1, b0);
                     gkat.is_false(&b1) || self.is_dead(gkat, *st, n)
@@ -38,6 +37,7 @@ impl<B: BExp> Solver<B> {
                 if !assert1 {
                     return false;
                 }
+                let reject2 = self.reject(gkat, j, n);
                 let assert2 = delta1.iter().all(|(b0, st, _)| {
                     let b1 = gkat.mk_and(&reject2, b0);
                     gkat.is_false(&b1) || self.is_dead(gkat, *st, m)

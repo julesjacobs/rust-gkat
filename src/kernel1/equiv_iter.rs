@@ -18,12 +18,11 @@ impl<B: BExp> Solver<B> {
                 let eps2 = self.epsilon(gkat, &exp2);
                 let dexp1 = self.derivative(gkat, &exp1);
                 let dexp2 = self.derivative(gkat, &exp2);
-                let reject1 = self.reject(gkat, &eps1, &dexp1);
-                let reject2 = self.reject(gkat, &eps2, &dexp2);
 
                 if !(gkat.is_equiv(&eps1, &eps2)) {
                     return false;
                 }
+                let reject1 = self.reject(gkat, &eps1, &dexp1);
                 let assert1 = dexp2.iter().all(|(b0, exp, _)| {
                     let b1 = gkat.mk_and(&reject1, b0);
                     gkat.is_false(&b1) || self.is_dead(gkat, &exp)
@@ -31,6 +30,7 @@ impl<B: BExp> Solver<B> {
                 if !assert1 {
                     return false;
                 }
+                let reject2 = self.reject(gkat, &eps2, &dexp2);
                 let assert2 = dexp1.iter().all(|(b0, exp, _)| {
                     let b1 = gkat.mk_and(&reject2, b0);
                     gkat.is_false(&b1) || self.is_dead(gkat, &exp)

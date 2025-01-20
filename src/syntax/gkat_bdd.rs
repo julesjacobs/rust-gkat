@@ -2,7 +2,7 @@ use super::*;
 use core::fmt;
 use cudd::*;
 use cudd_sys::*;
-use gxhash::HashMap;
+use gxhash::{GxBuildHasher, HashMap};
 use hashconsing::{HConsign, HashConsign};
 use std::{fmt::Debug, hash::Hash, ptr};
 
@@ -38,12 +38,14 @@ impl Debug for BDDBExp {
 }
 
 impl Hash for BDDBExp {
+    #[inline]
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         ptr::hash(self, state);
     }
 }
 
 impl PartialEq for BDDBExp {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.node == other.node
     }
@@ -71,7 +73,7 @@ impl BDDManager {
 
 pub struct BDDGkat {
     name_map: HashMap<String, BDDBExp>,
-    exp_hcons: HConsign<Exp_<BDDBExp>>,
+    exp_hcons: HConsign<Exp_<BDDBExp>, GxBuildHasher>,
     // BDD manager
     man: BDDManager,
 }
@@ -80,7 +82,7 @@ impl BDDGkat {
     pub fn new() -> Self {
         Self {
             name_map: HashMap::default(),
-            exp_hcons: HConsign::empty(),
+            exp_hcons: HConsign::with_hasher(GxBuildHasher::default()),
             man: BDDManager::new(),
         }
     }
@@ -158,14 +160,17 @@ impl Gkat<BDDBExp> for BDDGkat {
         }
     }
 
+    #[inline]
     fn is_false(&mut self, b: &BDDBExp) -> bool {
         unsafe { b.node == Cudd_ReadLogicZero(self.man.0) }
     }
 
+    #[inline]
     fn is_equiv(&mut self, b1: &BDDBExp, b2: &BDDBExp) -> bool {
         b1 == b2
     }
 
+    #[inline]
     fn hashcons(&mut self, e: Exp_<BDDBExp>) -> Exp<BDDBExp> {
         self.exp_hcons.mk(e)
     }
