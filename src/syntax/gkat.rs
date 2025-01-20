@@ -121,6 +121,7 @@ pub trait Gkat<B: Clone + Hash + Eq> {
         self.hashcons(Exp_::While(b, p))
     }
 
+    // Create a new Exp from parsing.
     fn from_exp(&mut self, raw: parsing::Exp) -> Exp<B> {
         use parsing::Exp::*;
         match raw {
