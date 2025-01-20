@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use super::*;
-use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
+use gxhash::{HashMap, HashSet};
 
 pub struct Solver<B> {
     // automaton states

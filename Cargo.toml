@@ -23,7 +23,7 @@ lalrpop = "0.21.0"
 [dependencies]
 mimalloc = "0.1.43"
 recursive = "0.1.1"
-ahash = "0.8.11"
+gxhash = "3.4.1"
 hashconsing = "1.6.0"
 disjoint-sets = "0.4.2"
 cudd-sys = "1.0.0"

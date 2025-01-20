@@ -1,6 +1,6 @@
 use super::*;
-use ahash::{HashMap, HashSet};
 use disjoint_sets::UnionFindNode;
+use gxhash::{HashMap, HashSet};
 
 pub type Deriv<B> = Vec<(B, Exp<B>, u64)>;
 

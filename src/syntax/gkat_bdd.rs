@@ -1,8 +1,8 @@
 use super::*;
-use ahash::HashMap;
 use core::fmt;
 use cudd::*;
 use cudd_sys::*;
+use gxhash::HashMap;
 use hashconsing::{HConsign, HashConsign};
 use std::{fmt::Debug, hash::Hash, ptr};
 
@@ -72,6 +72,7 @@ impl BDDManager {
 pub struct BDDGkat {
     name_map: HashMap<String, BDDBExp>,
     exp_hcons: HConsign<Exp_<BDDBExp>>,
+    // BDD manager
     man: BDDManager,
 }
 

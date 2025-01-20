@@ -1,5 +1,5 @@
 use crate::parsing::{self};
-use ahash::AHasher;
+use gxhash::GxHasher;
 use hashconsing::HConsed;
 use std::{
     fmt::Debug,
@@ -61,7 +61,7 @@ pub trait Gkat<B: Clone + Hash + Eq> {
     fn hashcons(&mut self, e: Exp_<B>) -> Exp<B>;
 
     fn mk_act(&mut self, s: String) -> Exp<B> {
-        let mut hasher = AHasher::default();
+        let mut hasher = GxHasher::default();
         s.hash(&mut hasher);
         let a = hasher.finish();
         self.hashcons(Exp_::Act(a))

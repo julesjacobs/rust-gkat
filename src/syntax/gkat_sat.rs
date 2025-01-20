@@ -1,5 +1,5 @@
 use super::*;
-use ahash::HashMap;
+use gxhash::HashMap;
 use hashconsing::{HConsign, HashConsign};
 use logicng::{
     formulas::{EncodedFormula, FormulaFactory},
@@ -12,8 +12,11 @@ impl BExp for EncodedFormula {}
 pub struct SATGkat {
     name_map: HashMap<String, EncodedFormula>,
     exp_hcons: HConsign<Exp_<EncodedFormula>>,
+    // formula manager and solver
     solver: MiniSat,
     man: FormulaFactory,
+    // caching
+    is_false_cache: HashMap<EncodedFormula, bool>,
 }
 
 impl SATGkat {
@@ -23,6 +26,7 @@ impl SATGkat {
             exp_hcons: HConsign::empty(),
             solver: MiniSat::new(),
             man: FormulaFactory::new(),
+            is_false_cache: HashMap::default(),
         }
     }
 }
@@ -58,6 +62,9 @@ impl Gkat<EncodedFormula> for SATGkat {
     }
 
     fn is_false(&mut self, b: &EncodedFormula) -> bool {
+        if let Some(result) = self.is_false_cache.get(b) {
+            return *result;
+        }
         self.solver.add(*b, &self.man);
         let result = match self.solver.sat() {
             sat::Tristate::True => false,
@@ -65,20 +72,14 @@ impl Gkat<EncodedFormula> for SATGkat {
             sat::Tristate::Undef => panic!("unknown"),
         };
         self.solver.reset();
+        self.is_false_cache.insert(*b, result);
         return result;
     }
 
     fn is_equiv(&mut self, b1: &EncodedFormula, b2: &EncodedFormula) -> bool {
         let b = self.man.equivalence(*b1, *b2);
         let nb = self.mk_not(&b);
-        self.solver.add(nb, &self.man);
-        let result = match self.solver.sat() {
-            sat::Tristate::True => false,
-            sat::Tristate::False => true,
-            sat::Tristate::Undef => panic!("unknown"),
-        };
-        self.solver.reset();
-        return result;
+        self.is_false(&nb)
     }
 
     fn hashcons(&mut self, e: Exp_<EncodedFormula>) -> Exp<EncodedFormula> {

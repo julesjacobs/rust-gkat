@@ -1,5 +1,5 @@
 use super::*;
-use ahash::{HashMap, HashMapExt};
+use gxhash::{HashMap, HashMapExt};
 use recursive::recursive;
 
 struct RawAutomaton<B> {
