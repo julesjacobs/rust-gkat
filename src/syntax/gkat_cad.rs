@@ -12,7 +12,6 @@ pub enum Formula_ {
     Lit(i32),
     Cnj(Formula, Formula),
     Dsj(Formula, Formula),
-    Eqv(Formula, Formula),
     Not(Formula),
 }
 
@@ -27,7 +26,7 @@ pub struct CADGkat {
     name_map: HashMap<String, Formula>,
     exp_hcons: HConsign<Exp_<Formula>, GxBuildHasher>,
     // caching
-    cnf_ctrl_cache: HashMap<Formula, i32>,
+    cnf_cache: HashMap<(Formula, bool), i32>,
     is_false_cache: HashMap<Formula, bool>,
 }
 
@@ -39,7 +38,7 @@ impl CADGkat {
             solver: CaDiCal::new(),
             name_map: HashMap::default(),
             exp_hcons: HConsign::with_hasher(GxBuildHasher::default()),
-            cnf_ctrl_cache: HashMap::default(),
+            cnf_cache: HashMap::default(),
             is_false_cache: HashMap::default(),
         }
     }
@@ -49,56 +48,53 @@ impl CADGkat {
         return self.var_stamp;
     }
 
-    pub fn pg_cnf(&mut self, b: &Formula) -> i32 {
+    pub fn pg_cnf(&mut self, b: &Formula, polarity: bool) -> i32 {
         if let Formula_::Lit(l) = b.get() {
             return *l;
         }
-        if let Some(l) = self.cnf_ctrl_cache.get(b) {
+        if let Some(l) = self.cnf_cache.get(&(b.clone(), polarity)) {
             return *l;
         }
         let l = self.fresh_lit();
-        self.pg_cnf_rec(b, l);
+        self.pg_cnf_rec(b, l, polarity);
         return l;
     }
 
-    pub fn pg_cnf_rec(&mut self, b: &Formula, l: i32) {
+    pub fn pg_cnf_rec(&mut self, b: &Formula, l: i32, polarity: bool) {
         use Formula_::*;
         match b.get() {
             Cst(_) => unreachable!(),
             Lit(_) => (),
             Cnj(b1, b2) => {
-                let l1 = self.pg_cnf(b1);
-                let l2 = self.pg_cnf(b2);
-                self.solver.clause2(-l, l1);
-                self.solver.clause2(-l, l2);
-                self.solver.clause3(-l1, -l2, l);
+                let l1 = self.pg_cnf(b1, polarity);
+                let l2 = self.pg_cnf(b2, polarity);
+                if polarity {
+                    self.solver.clause2(-l, l1);
+                    self.solver.clause2(-l, l2);
+                } else {
+                    self.solver.clause3(-l1, -l2, l);
+                }
             }
             Dsj(b1, b2) => {
-                let l1 = self.pg_cnf(b1);
-                let l2 = self.pg_cnf(b2);
-                self.solver.clause3(-l, l1, l2);
-                self.solver.clause2(-l1, l);
-                self.solver.clause2(-l2, l);
+                let l1 = self.pg_cnf(b1, polarity);
+                let l2 = self.pg_cnf(b2, polarity);
+                if polarity {
+                    self.solver.clause3(-l, l1, l2);
+                } else {
+                    self.solver.clause2(-l1, l);
+                    self.solver.clause2(-l2, l);
+                }
             }
-            Eqv(b1, b2) => {
-                let l1 = self.pg_cnf(b1);
-                let l2 = self.pg_cnf(b2);
-                self.solver.clause3(-l, -l1, l2);
-                self.solver.clause3(-l, l1, -l2);
-                self.solver.clause1(l);
-                self.solver.clause2(l1, l2);
-                self.solver.clause2(-l1, -l2);
-            }
-            Not(b1) => self.pg_cnf_rec(b1, -l),
+            Not(b1) => self.pg_cnf_rec(b1, -l, !polarity),
         };
-        self.cnf_ctrl_cache.insert(b.clone(), l);
+        self.cnf_cache.insert((b.clone(), polarity), l);
     }
 
     pub fn check_sat(&mut self, b: &Formula) -> bool {
         if let Formula_::Cst(b) = b.get() {
             return *b;
         }
-        let ctrl = self.pg_cnf(b);
+        let ctrl = self.pg_cnf(b, true);
         self.solver.assume(ctrl);
         let result = match self.solver.solve() {
             Status::SATISFIABLE => true,
@@ -173,17 +169,12 @@ impl Gkat<Formula> for CADGkat {
     }
 
     fn is_equiv(&mut self, b1: &Formula, b2: &Formula) -> bool {
-        use Formula_::*;
-        let b = match (b1.get(), b2.get()) {
-            (Cst(true), _) => b2.clone(),
-            (_, Cst(true)) => b1.clone(),
-            (Cst(false), _) => self.mk_not(b2),
-            (_, Cst(false)) => self.mk_not(b1),
-            _ if b1 == b2 => self.mk_one(),
-            _ => self.formula_hcons.mk(Formula_::Eqv(b1.clone(), b2.clone())),
-        };
-        let nb = self.mk_not(&b);
-        self.is_false(&nb)
+        let nb1 = self.mk_not(b1);
+        let nb2 = self.mk_not(b2);
+        let b12 = self.mk_or(b1, b2);
+        let nb12 = self.mk_or(&nb1, &nb2);
+        let b = self.mk_and(&b12, &nb12);
+        self.is_false(&b)
     }
 
     #[inline]
