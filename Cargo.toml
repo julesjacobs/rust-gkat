@@ -31,5 +31,7 @@ hashconsing = "1.6.0"
 disjoint-sets = "0.4.2"
 cudd-sys = "1.0.0"
 logicng = "0.1.0-alpha.3"
+splr = { version = "0.17.2", features = ["incremental_solver"] }
 lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
 clap = { version = "4.5.18", features = ["derive"] }
+cadical-sys = "0.3.0"

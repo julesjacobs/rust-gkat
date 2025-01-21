@@ -47,7 +47,7 @@ fn main() {
                 solver.equiv_iter(&mut gkat, &exp1, &exp2)
             }
             Solver::SAT => {
-                let mut gkat = SATGkat::new();
+                let mut gkat = CADGkat::new();
                 let mut solver = kernel1::Solver::new();
                 let exp1 = gkat.from_exp(exp1);
                 let exp2 = gkat.from_exp(exp2);
