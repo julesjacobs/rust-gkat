@@ -1,10 +1,7 @@
-use cadical_sys::*;
+use batsat::callbacks::Basic;
+use batsat::*;
 use gxhash::{GxBuildHasher, HashMap};
 use hashconsing::{HConsed, HConsign, HashConsign};
-use rustsat::instances::Cnf;
-use rustsat::solvers::{Solve, SolveIncremental, SolverResult};
-use rustsat::types::Clause;
-use rustsat::{encodings::CollectClauses, instances::SatInstance, types::Lit};
 
 use super::{BExp, Exp, Exp_, Gkat};
 
@@ -16,29 +13,28 @@ pub enum Formula_ {
     Lit(Lit),
     Cnj(Formula, Formula),
     Dsj(Formula, Formula),
-    Eqv(Formula, Formula),
     Not(Formula),
 }
 
 impl BExp for Formula {}
 
-pub struct CADGkat {
+pub struct BATGkat {
     // formula manager
     formula_hcons: HConsign<Formula_>,
-    instance: SatInstance,
+    solver: batsat::Solver<Basic>,
     // exp manager
     name_map: HashMap<String, Formula>,
     exp_hcons: HConsign<Exp_<Formula>, GxBuildHasher>,
     // caching
-    cnf_cache: HashMap<(Formula, bool), (Lit, Cnf)>,
+    cnf_cache: HashMap<(Formula, bool), Lit>,
     is_false_cache: HashMap<Formula, bool>,
 }
 
-impl CADGkat {
+impl BATGkat {
     pub fn new() -> Self {
         Self {
             formula_hcons: HConsign::empty(),
-            instance: SatInstance::new(),
+            solver: batsat::Solver::default(),
             name_map: HashMap::default(),
             exp_hcons: HConsign::with_hasher(GxBuildHasher::default()),
             cnf_cache: HashMap::default(),
@@ -47,37 +43,32 @@ impl CADGkat {
     }
 
     pub fn fresh_lit(&mut self) -> Lit {
-        self.instance.new_lit()
+        Lit::new(self.solver.new_var_default(), true)
     }
 
-    pub fn pg_cnf(&mut self, b: &Formula, polarity: bool) -> (Lit, Cnf) {
+    pub fn pg_cnf(&mut self, b: &Formula, polarity: bool) -> (Lit, Vec<Vec<Lit>>) {
         if let Formula_::Lit(l) = b.get() {
-            return (*l, Cnf::new());
-        }
-        if let Some(elem) = self.cnf_cache.get(&(b.clone(), polarity)) {
-            return elem.clone();
+            return (*l, vec![]);
         }
         let l = self.fresh_lit();
         let cnf = self.pg_cnf_rec(b, l, polarity);
-        self.cnf_cache
-            .insert((b.clone(), polarity), (l, cnf.clone()));
         return (l, cnf);
     }
 
-    pub fn pg_cnf_rec(&mut self, b: &Formula, l: Lit, polarity: bool) -> Cnf {
+    pub fn pg_cnf_rec(&mut self, b: &Formula, l: Lit, polarity: bool) -> Vec<Vec<Lit>> {
         use Formula_::*;
-        let cnf = match b.get() {
+        match b.get() {
             Cst(_) => unreachable!(),
-            Lit(_) => Cnf::new(),
+            Lit(_) => vec![],
             Cnj(b1, b2) => {
                 let (l1, mut cnf) = self.pg_cnf(b1, polarity);
                 let (l2, cnf_ext) = self.pg_cnf(b2, polarity);
                 cnf.extend(cnf_ext);
                 if polarity {
-                    cnf.add_binary(!l, l1);
-                    cnf.add_binary(!l, l2);
+                    cnf.push(vec![!l, l1]);
+                    cnf.push(vec![!l, l2]);
                 } else {
-                    cnf.add_ternary(!l1, !l2, l);
+                    cnf.push(vec![!l1, !l2, l]);
                 };
                 cnf
             }
@@ -86,62 +77,40 @@ impl CADGkat {
                 let (l2, cnf_ext) = self.pg_cnf(b2, polarity);
                 cnf.extend(cnf_ext);
                 if polarity {
-                    cnf.add_ternary(!l, l1, l2);
+                    cnf.push(vec![!l, l1, l2]);
                 } else {
-                    cnf.add_binary(!l1, l);
-                    cnf.add_binary(!l2, l);
+                    cnf.push(vec![!l1, l]);
+                    cnf.push(vec![!l2, l]);
                 };
                 cnf
             }
-            Eqv(b1, b2) => {
-                let (l1, mut cnf) = self.pg_cnf(b1, polarity);
-                let (l2, cnf_ext1) = self.pg_cnf(b2, polarity);
-                let (l1n, cnf_ext2) = self.pg_cnf(b1, !polarity);
-                let (l2n, cnf_ext3) = self.pg_cnf(b2, !polarity);
-                cnf.extend(cnf_ext1);
-                cnf.extend(cnf_ext2);
-                cnf.extend(cnf_ext3);
-                cnf.add_binary(!l1, l1n);
-                cnf.add_binary(l1, !l1n);
-                cnf.add_binary(!l2, l2n);
-                cnf.add_binary(l2, !l2n);
-                if polarity {
-                    cnf.add_ternary(!l, !l1, l2);
-                    cnf.add_ternary(!l, l1, !l2);
-                } else {
-                    cnf.add_ternary(l, l1, l2);
-                    cnf.add_ternary(l, !l1, !l2);
-                };
-                cnf
-            }
-            Not(b1) => {
-                let (ln, mut cnf) = self.pg_cnf(b1, !polarity);
-                cnf.add_binary(l, ln);
-                cnf.add_binary(!l, !ln);
-                cnf
-            }
-        };
-        return cnf;
+            Not(b1) => self.pg_cnf_rec(b1, !l, !polarity),
+        }
     }
 
     pub fn check_sat(&mut self, b: &Formula) -> bool {
         if let Formula_::Cst(b) = b.get() {
             return *b;
         }
-        let mut solver = rustsat_kissat::Kissat::default();
         let (l, mut cnf) = self.pg_cnf(b, true);
-        cnf.add_unit(l);
-        solver.add_cnf(cnf).unwrap();
-        match solver.solve().unwrap() {
-            SolverResult::Sat => true,
-            SolverResult::Unsat => false,
-            SolverResult::Interrupted => panic!(),
+        cnf.push(vec![l]);
+        for mut cls in cnf {
+            self.solver.add_clause_reuse(&mut cls);
+        }
+        let result = self.solver.solve_limited(&[]);
+        self.solver.reset();
+        if result == lbool::TRUE {
+            return true;
+        } else if result == lbool::FALSE {
+            return false;
+        } else {
+            panic!()
         }
     }
 }
 
 // Gkat based on BDD.
-impl Gkat<Formula> for CADGkat {
+impl Gkat<Formula> for BATGkat {
     #[inline]
     fn mk_zero(&mut self) -> Formula {
         self.formula_hcons.mk(Formula_::Cst(false))
@@ -188,7 +157,7 @@ impl Gkat<Formula> for CADGkat {
         use Formula_::*;
         match b.get() {
             Cst(b) => self.formula_hcons.mk(Formula_::Cst(!b)),
-            Lit(l) => self.formula_hcons.mk(Lit(-*l)),
+            Lit(l) => self.formula_hcons.mk(Lit(!*l)),
             Not(b) => b.clone(),
             _ => self.formula_hcons.mk(Not(b.clone())),
         }
@@ -204,16 +173,12 @@ impl Gkat<Formula> for CADGkat {
     }
 
     fn is_equiv(&mut self, b1: &Formula, b2: &Formula) -> bool {
-        use Formula_::*;
-        let b = match (b1.get(), b2.get()) {
-            (Cst(true), _) => b2.clone(),
-            (_, Cst(true)) => b1.clone(),
-            (Cst(false), _) => self.mk_not(b2),
-            (_, Cst(false)) => self.mk_not(b1),
-            _ => self.formula_hcons.mk(Eqv(b1.clone(), b2.clone())),
-        };
-        let nb = self.mk_not(&b);
-        self.is_false(&nb)
+        let nb1 = self.mk_not(b1);
+        let nb2 = self.mk_not(b2);
+        let b12 = self.mk_or(b1, b2);
+        let nb12 = self.mk_or(&nb1, &nb2);
+        let b = self.mk_and(&b12, &nb12);
+        self.is_false(&b)
     }
 
     #[inline]

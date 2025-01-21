@@ -35,3 +35,7 @@ splr = { version = "0.17.2", features = ["incremental_solver"] }
 lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
 clap = { version = "4.5.18", features = ["derive"] }
 cadical-sys = "0.3.0"
+rustsat = "0.6.3"
+rustsat-kissat = "0.3.3"
+rustsat-minisat = "0.4.3"
+batsat = "0.6.0"
