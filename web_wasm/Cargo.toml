@@ -3,7 +3,9 @@ name = "rust-gkat-wasm"
 version = "0.1.0"
 edition = "2024"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [profile.dev]
 overflow-checks = true
 debug = true
@@ -24,16 +26,10 @@ debug = true
 lalrpop = "0.21.0"
 
 [dependencies]
-mimalloc = { version = "0.1.43", default-features = false }
-recursive = "0.1.1"
-gxhash = "3.4.1"
-hashconsing = "1.6.0"
-disjoint-sets = "0.4.2"
-cudd-sys = "1.0.0"
-logicng = "0.1.0-alpha.3"
 lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
 clap = { version = "4.5.18", features = ["derive"] }
 wasm-bindgen = "0.2.92"
+disjoint-sets = "0.4.2"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.42"

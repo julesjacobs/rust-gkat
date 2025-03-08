@@ -1,0 +1,5 @@
+[package]
+profile = "web"
+
+[wasm-opt]
+level = 3

@@ -1,0 +1,38 @@
+use std::str::FromStr;
+use crate::parsing::raw::*;
+
+grammar;
+
+Name: String = <s:r"[a-zA-Z][a-zA-Z0-9]*"> => s.to_string();
+
+pub BExp: BExp = {
+    "0" => BExp::Zero,
+    "1" => BExp::One,
+    <s:Name> => BExp::PBool(s),
+    "(" "and" <bs:BExp+> <b:BExp> ")" => {
+        bs.into_iter().rfold(b, |acc, p| BExp::And(Box::new(p), Box::new(acc)))
+    },
+    "(" "or" <bs:BExp+> <b:BExp> ")" => {
+        bs.into_iter().rfold(b, |acc, p| BExp::Or(Box::new(p), Box::new(acc)))
+    },
+    "(" "not" <b:BExp> ")" => BExp::Not(Box::new(b)),
+};
+
+pub Exp: Exp = {
+    <s:Name> => Exp::Act(s),
+    "(" "test" <b:BExp> ")" => Exp::Test(b),
+    "(" "seq" <ps:Exp+> <p:Exp>")" => {
+        ps.into_iter().rfold(p, |acc, p| Exp::Seq(Box::new(p), Box::new(acc)))
+    },
+    "(" "if" <b:BExp> <p1:Exp> <p2:Exp> ")" => Exp::Ifte(b, Box::new(p1), Box::new(p2)),
+    "(" "while" <b:BExp> <p:Exp> ")" => Exp::While(b, Box::new(p)),
+};
+
+pub Equiv: bool = {
+    "(" "equiv" "0" ")" => false,
+    "(" "equiv" "1" ")" => true,
+}
+
+pub Input: (Exp, Exp, bool) = {
+    <e1:Exp> <e2:Exp> <b:Equiv> => (e1, e2, b)
+};
