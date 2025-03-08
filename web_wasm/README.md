@@ -1,69 +1,74 @@
-# Rust-GKAT WebAssembly
+# Rust-GKAT WebAssembly Demo
 
-This is a WebAssembly-compatible version of the rust-gkat project. It provides a pure Rust implementation of Binary Decision Diagrams (BDDs) for use in web browsers.
+This directory contains a WebAssembly version of the rust-gkat project, allowing you to run GKAT equivalence checking directly in your browser.
 
-## Features
+## Overview
 
-- Pure Rust implementation of BDDs (no C dependencies)
-- WebAssembly compatibility
-- Support for both kernel methods:
-  - K1: Symbolic derivative method
-  - K2: Symbolic Thompson's construction
+GKAT (Guarded Kleene Algebra with Tests) is a formal system for reasoning about programs with conditionals and loops. This demo allows you to check the equivalence of GKAT expressions using two different algorithms:
 
-## Project Structure
+1. **k1 (Symbolic derivative)** - Uses symbolic derivatives to check equivalence
+2. **k2 (Thompson's construction)** - Uses Thompson's construction to build automata
 
-- `src/`: Rust source code
-  - `syntax/`: Data structures and traits
-    - `gkat.rs`: Common interfaces
-    - `gkat_pure_bdd.rs`: Pure Rust BDD implementation
-  - `kernel1/`: Symbolic derivative method
-  - `kernel2/`: Symbolic Thompson's construction
-  - `parsing/`: Parser for the input language
-  - `lib.rs`: WebAssembly bindings
-  - `main.rs`: Command-line interface
-- `pkg/`: WebAssembly output (generated)
-- `examples/`: Example input files
-- `tests/`: Test files
-- `index.html`: Web interface
-- `server.js`: Simple Node.js server for testing
+## Getting Started
 
-## Building
+### Prerequisites
 
-To build the WebAssembly package, you'll need [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/):
+- [Node.js](https://nodejs.org/) (for running the server)
+- [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/) (for building the WebAssembly module)
+
+### Building the WebAssembly Module
 
 ```bash
+# From the web_wasm directory
 wasm-pack build --target web
 ```
 
-This will generate a `pkg` directory containing the WebAssembly module and JavaScript bindings.
-
-## Running
-
-To run the web interface locally:
+### Running the Server
 
 ```bash
+# From the web_wasm directory
 node server.js
 ```
 
-Then open a browser and navigate to http://localhost:8080/.
+Then open your browser to http://localhost:8080
 
-## Testing
+## Usage
 
-Run the tests with:
+1. Enter two expressions to check for equivalence in the format `expr1 == expr2`
+2. Click one of the "Check" buttons to verify equivalence using the selected algorithm
+3. View the result, which will show whether the expressions are equivalent and how long the check took
 
-```bash
-cargo test
-```
+## Syntax
 
-## Input Format
+The following syntax is supported:
 
-The input format is a simple language for expressing guarded Kleene algebra with tests (GKAT) expressions. Examples:
+- `p1, p2, p3, ...` - Basic program variables
+- `b1, b2, b3, ...` - Boolean test variables
+- `e1 ; e2` - Sequential composition
+- `e1 + e2` - Choice (non-deterministic)
+- `if b then e1 else e2` - Conditional
+- `while b do e` - Loop
 
-- `p1 ; p2 == p1 ; p2 ? true`: Simple sequence
-- `while p1 do (p2 ; p3) == while p1 do (p2 ; p3) ? true`: While loop
-- `if p1 then p2 else p3 == if p1 then p2 else p3 ? true`: If-then-else
-- `p1 ; (p2 + p3) == (p1 ; p2) + (p1 ; p3) ? true`: Distributivity
+## Examples
 
-## Implementation Details
+- Simple identity: `p1 == p1`
+- Sequence: `p1 ; p2 == p1 ; p2`
+- While loop: `while b1 do p2 ; p3 == while b1 do p2 ; p3`
+- If-Then-Else: `if b1 then p2 else p3 == if b1 then p2 else p3`
+- Associativity: `p1 ; (p2 ; p3) == (p1 ; p2) ; p3`
+- Distributivity: `p1 ; (p2 + p3) == (p1 ; p2) + (p1 ; p3)`
 
-This implementation replaces the C-based CUDD library and SAT solver with a pure Rust implementation of Binary Decision Diagrams (BDDs). This makes it compatible with WebAssembly, allowing it to run in web browsers.
+## Project Structure
+
+- `index.html` - The main web interface
+- `server.js` - A simple Node.js server for serving the application
+- `src/` - Rust source code for the WebAssembly module
+- `pkg/` - Compiled WebAssembly module (generated after building)
+
+## Troubleshooting
+
+If you encounter issues with the server already running on port 8080, you can modify the `PORT` constant in `server.js` to use a different port.
+
+## License
+
+This project is licensed under the same license as the main rust-gkat project.

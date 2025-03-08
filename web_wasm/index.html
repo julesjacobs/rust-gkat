@@ -2,80 +2,125 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rust-GKAT WebAssembly Demo</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    textarea {
-      width: 100%;
-      height: 100px;
-      margin-bottom: 10px;
-      font-family: monospace;
-    }
-    button {
-      padding: 8px 16px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      margin-right: 10px;
-      margin-bottom: 10px;
-    }
-    #result {
-      margin-top: 20px;
-      padding: 10px;
-      border: 1px solid #ddd;
-      background-color: #f9f9f9;
-    }
-    .examples {
-      margin-top: 20px;
-      margin-bottom: 20px;
-    }
-    .example {
-      padding: 8px;
-      margin-bottom: 5px;
-      background-color: #f0f0f0;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .example:hover {
-      background-color: #e0e0e0;
-    }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Rust-GKAT WebAssembly Demo</h1>
+  <button id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle dark mode">
+    <i class="bi bi-moon-fill"></i>
+  </button>
 
-  <p>This is a WebAssembly version of the rust-gkat project. It uses a pure Rust implementation of Binary Decision Diagrams (BDDs) instead of the C-based CUDD library.</p>
+  <div class="container">
+    <h1 class="mb-4">Rust-GKAT WebAssembly Demo</h1>
 
-  <div class="examples">
-    <h3>Examples:</h3>
-    <div class="example" onclick="loadExample('p1 == p1')">Simple: Identity p1 = p1</div>
-    <div class="example" onclick="loadExample('p1 ; p2 == p1 ; p2')">Sequence: p1 ; p2 = p1 ; p2</div>
-    <div class="example" onclick="loadExample('while b1 do p2 ; p3 == while b1 do p2 ; p3')">While: while b1 do (p2 ; p3) = while b1 do (p2 ; p3)</div>
-    <div class="example" onclick="loadExample('if b1 then p2 else p3 == if b1 then p2 else p3')">If-Then-Else: if b1 then p2 else p3 = if b1 then p2 else p3</div>
-    <div class="example" onclick="loadExample('p1 ; (p2 ; p3) == (p1 ; p2) ; p3')">Associativity: p1 ; (p2 ; p3) = (p1 ; p2) ; p3</div>
-    <div class="example" onclick="loadExample('p1 ; (p2 + p3) == (p1 ; p2) + (p1 ; p3)')">Distributivity: p1 ; (p2 + p3) = (p1 ; p2) + (p1 ; p3)</div>
+    <div class="card mb-4">
+      <div class="card-header">About</div>
+      <div class="card-body">
+        <p>This is a WebAssembly version of the <a href="https://github.com/julesjacobs/rust-gkat" target="_blank">rust-gkat</a> project. It uses a pure Rust implementation of Binary Decision Diagrams (BDDs) instead of the C-based CUDD library.</p>
+        <p>GKAT (Guarded Kleene Algebra with Tests) is a formal system for reasoning about programs with conditionals and loops. This demo allows you to check the equivalence of GKAT expressions using two different algorithms.</p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">Examples</div>
+      <div class="card-body">
+        <div class="examples">
+          <div class="example" onclick="loadExample('p1 == p1')">
+            <strong>Simple:</strong> Identity p1 = p1
+          </div>
+          <div class="example" onclick="loadExample('p1 ; p2 == p1 ; p2')">
+            <strong>Sequence:</strong> p1 ; p2 = p1 ; p2
+          </div>
+          <div class="example" onclick="loadExample('while b1 do p2 ; p3 == while b1 do p2 ; p3')">
+            <strong>While:</strong> while b1 do (p2 ; p3) = while b1 do (p2 ; p3)
+          </div>
+          <div class="example" onclick="loadExample('if b1 then p2 else p3 == if b1 then p2 else p3')">
+            <strong>If-Then-Else:</strong> if b1 then p2 else p3 = if b1 then p2 else p3
+          </div>
+          <div class="example" onclick="loadExample('p1 ; (p2 ; p3) == (p1 ; p2) ; p3')">
+            <strong>Associativity:</strong> p1 ; (p2 ; p3) = (p1 ; p2) ; p3
+          </div>
+          <div class="example" onclick="loadExample('p1 ; (p2 + p3) == (p1 ; p2) + (p1 ; p3)')">
+            <strong>Distributivity:</strong> p1 ; (p2 + p3) = (p1 ; p2) + (p1 ; p3)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">Equivalence Checker</div>
+      <div class="card-body">
+        <p>Enter two expressions to check for equivalence (format: <code>expr1 == expr2</code>):</p>
+        <textarea id="input" placeholder="Example: p1 == p1" class="form-control"></textarea>
+
+        <div class="d-flex flex-wrap">
+          <button id="checkK1" class="btn btn-primary">
+            <i class="bi bi-check-circle-fill me-1"></i> Check with k1 (Symbolic derivative)
+          </button>
+          <button id="checkK2" class="btn btn-primary">
+            <i class="bi bi-check-circle-fill me-1"></i> Check with k2 (Thompson's construction)
+          </button>
+        </div>
+
+        <div id="loading" class="loading">
+          <div class="d-flex align-items-center justify-content-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <span>Computing equivalence...</span>
+          </div>
+        </div>
+
+        <div id="result" class="mt-3"></div>
+      </div>
+    </div>
+
+    <div class="about-section">
+      <h4>Syntax Guide</h4>
+      <p>The following syntax is supported:</p>
+      <ul>
+        <li><code>p1, p2, p3, ...</code> - Basic program variables</li>
+        <li><code>b1, b2, b3, ...</code> - Boolean test variables</li>
+        <li><code>e1 ; e2</code> - Sequential composition</li>
+        <li><code>e1 + e2</code> - Choice (non-deterministic)</li>
+        <li><code>if b then e1 else e2</code> - Conditional</li>
+        <li><code>while b do e</code> - Loop</li>
+      </ul>
+      <p>For more information, visit the <a href="https://github.com/julesjacobs/rust-gkat" target="_blank">GitHub repository</a>.</p>
+    </div>
   </div>
-
-  <p>Enter two expressions to check for equivalence:</p>
-  <textarea id="input" placeholder="Example: p1 == p1"></textarea>
-
-  <div>
-    <button id="checkK1">Check with k1 (Symbolic derivative)</button>
-    <button id="checkK2">Check with k2 (Thompson's construction)</button>
-  </div>
-
-  <div id="result"></div>
 
   <script type="module">
     import init, { GkatWasm, Kernel } from './pkg/rust_gkat_wasm.js';
 
     let gkat;
+
+    // Dark mode toggle functionality
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const icon = darkModeToggle.querySelector('i');
+
+    // Check for saved preference
+    if (localStorage.getItem('darkMode') === 'enabled') {
+      document.body.classList.add('dark-mode');
+      icon.classList.remove('bi-moon-fill');
+      icon.classList.add('bi-sun-fill');
+    }
+
+    darkModeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+
+      // Update icon
+      if (document.body.classList.contains('dark-mode')) {
+        icon.classList.remove('bi-moon-fill');
+        icon.classList.add('bi-sun-fill');
+        localStorage.setItem('darkMode', 'enabled');
+      } else {
+        icon.classList.remove('bi-sun-fill');
+        icon.classList.add('bi-moon-fill');
+        localStorage.setItem('darkMode', 'disabled');
+      }
+    });
 
     async function initialize() {
       try {
@@ -86,38 +131,106 @@
 
         // Load a default example
         loadExample('p1 == p1');
+
+        // Hide loading indicator on initial load
+        document.getElementById('loading').style.display = 'none';
       } catch (error) {
-        document.getElementById('result').innerHTML = `<p style="color: red;"><strong>Error initializing WebAssembly:</strong> ${error.message}</p>`;
+        document.getElementById('result').innerHTML = `
+          <div class="alert alert-danger">
+            <strong>Error initializing WebAssembly:</strong> ${error.message}
+          </div>
+        `;
       }
     }
 
     window.loadExample = function(example) {
       document.getElementById('input').value = example;
+      document.getElementById('result').innerHTML = '';
+
+      // Add visual feedback when example is loaded
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = `
+        <div class="alert alert-info">
+          Example loaded: <code>${example}</code>
+        </div>
+      `;
+
+      // Fade out the message after 2 seconds
+      setTimeout(() => {
+        resultDiv.innerHTML = '';
+      }, 2000);
     };
 
     function checkEquivalence(kernel) {
       const input = document.getElementById('input').value;
       const resultDiv = document.getElementById('result');
+      const loadingDiv = document.getElementById('loading');
 
       if (!input.trim()) {
-        resultDiv.innerHTML = `<p style="color: red;"><strong>Error:</strong> Please enter an expression</p>`;
+        resultDiv.innerHTML = `
+          <div class="alert alert-danger">
+            <strong>Error:</strong> Please enter an expression
+          </div>
+        `;
         return;
       }
 
-      try {
-        const startTime = performance.now();
-        const result = gkat.check_equivalence(input, kernel);
-        const endTime = performance.now();
-
+      // Basic validation - check for == format
+      if (!input.includes('==')) {
         resultDiv.innerHTML = `
-          <p><strong>Result:</strong> ${result ? 'Equivalent' : 'Not equivalent'}</p>
-          <p><strong>Time:</strong> ${(endTime - startTime).toFixed(2)}ms</p>
-          <p><strong>Kernel:</strong> ${kernel === Kernel.k1 ? 'k1 (Symbolic derivative)' : 'k2 (Thompson\'s construction)'}</p>
+          <div class="alert alert-danger">
+            <strong>Error:</strong> Expression must be in the format "expr1 == expr2"
+          </div>
         `;
-      } catch (error) {
-        resultDiv.innerHTML = `<p style="color: red;"><strong>Error:</strong> ${error.message}</p>`;
+        return;
       }
+
+      // Show loading indicator
+      loadingDiv.style.display = 'block';
+      resultDiv.innerHTML = '';
+
+      // Use setTimeout to allow the UI to update before starting computation
+      setTimeout(() => {
+        try {
+          const startTime = performance.now();
+          const result = gkat.check_equivalence(input, kernel);
+          const endTime = performance.now();
+          const timeTaken = (endTime - startTime).toFixed(2);
+
+          // Hide loading indicator
+          loadingDiv.style.display = 'none';
+
+          resultDiv.innerHTML = `
+            <div class="card">
+              <div class="card-header">Result</div>
+              <div class="card-body">
+                <p><strong>Equivalence:</strong> <span class="${result ? 'result-success' : 'result-failure'}">${result ? 'Equivalent ✓' : 'Not equivalent ✗'}</span></p>
+                <p><strong>Time:</strong> ${timeTaken}ms</p>
+                <p><strong>Kernel:</strong> ${kernel === Kernel.k1 ? 'k1 (Symbolic derivative)' : 'k2 (Thompson\'s construction)'}</p>
+              </div>
+            </div>
+          `;
+        } catch (error) {
+          // Hide loading indicator
+          loadingDiv.style.display = 'none';
+
+          resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+              <strong>Error:</strong> ${error.message}
+            </div>
+          `;
+        }
+      }, 50);
     }
+
+    // Add keyboard shortcut for checking equivalence
+    document.getElementById('input').addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        checkEquivalence(Kernel.k1);
+      } else if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
+        checkEquivalence(Kernel.k2);
+      }
+    });
 
     initialize();
   </script>
